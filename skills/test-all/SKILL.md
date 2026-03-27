@@ -2,18 +2,17 @@
 name: test-all
 description: >
   Run ALL tests across ALL packages — including expensive integration tests
-  (real API keys, real DB) and E2E (Playwright). Reports full statistics:
-  total tests, passed, failed, skipped, and delta vs previous run.
-argument-hint: "[optional: 'skip-e2e' or 'only-back' to limit scope]"
+  (real API keys, real DB) and E2E (Playwright). Auto-detects project structure,
+  test runners, and lint tools. Reports full statistics with delta vs previous run.
+argument-hint: "[optional: 'skip-e2e', 'only-<package>' to limit scope]"
 model: opus
 effort: max
 ---
 
 # Роль
 
-Ты — CI-оператор, который запускает **все без исключения** тесты в монорепозитории
-и выдаёт детальный отчёт. Включая дорогие integration-тесты (OpenAI API) и E2E
-(Playwright + Docker). Ничего не пропускаешь.
+Ты — CI-оператор, который запускает **все без исключения** тесты в проекте
+и выдаёт детальный отчёт. Ничего не пропускаешь.
 
 Язык общения: **русский**. Технические термины — на языке оригинала.
 
@@ -27,98 +26,110 @@ $ARGUMENTS
 
 # Алгоритм
 
-## Шаг 1: Снапшот "ДО"
+## Шаг 0: Разведка структуры проекта
 
-Сначала подсчитай количество тестов **до запуска**, чтобы потом сравнить.
+**Обязателен перед запуском.** Определи автоматически:
 
-Для каждого пакета собери список тестовых функций:
+### Пакеты
 
 ```bash
-# Backend — все слои
-cd packages/back && uv run pytest tests/ --collect-only -q 2>&1 | tail -5
+# Монорепо: ищи packages/*/Makefile или packages/*/package.json
+ls packages/*/Makefile packages/*/package.json packages/*/pyproject.toml 2>/dev/null
 
-# Collector
-cd packages/collector && uv run pytest tests/ --collect-only -q 2>&1 | tail -5
-
-# Frontend
-cd packages/front && npx vitest run --reporter=verbose 2>&1 | grep -c "✓\|×\|↓" || echo "0"
+# Или single-repo: ищи в корне
+ls Makefile package.json pyproject.toml 2>/dev/null
 ```
 
-Запиши общее число тестов по каждому пакету и слою. Это твой **baseline**.
+### Тест-раннеры (для каждого пакета)
+
+| Сигнал | Раннер | Команда сбора | Команда запуска |
+|--------|--------|---------------|-----------------|
+| `pyproject.toml` + `pytest` в deps | pytest | `uv run pytest --collect-only -q` | `uv run pytest -v` |
+| `package.json` + `vitest` в deps | vitest | `npx vitest run --reporter=verbose` | `npx vitest run` |
+| `package.json` + `jest` в deps | jest | `npx jest --listTests` | `npx jest` |
+| `playwright.config` | playwright | — | `npx playwright test` |
+
+### Тест-слои (для pytest-пакетов)
+
+```bash
+# Определи какие слои тестов существуют
+ls -d <package>/tests/*/ 2>/dev/null
+```
+
+Типичные слои: `unit`, `integration`, `architecture`, `state`, `security`, `cases`, `e2e`.
+Используй **те слои, которые реально существуют** — не угадывай.
+
+### Линтеры и тайпчекеры
+
+| Сигнал | Инструмент | Команда |
+|--------|-----------|---------|
+| `ruff` в pyproject.toml | ruff | `uv run ruff check .` |
+| `black` в pyproject.toml | black | `uv run black --check .` |
+| `mypy` в pyproject.toml | mypy | `uv run mypy src/ tests/` |
+| `eslint` в package.json | eslint | `npm run lint` |
+| `tsconfig.json` | tsc | `npx tsc -b --noEmit` |
+
+### E2E
+
+Проверь наличие E2E-пакета или конфига:
+
+```bash
+ls **/playwright.config.* 2>/dev/null
+```
+
+Если найден — проверь, запущен ли Docker:
+
+```bash
+docker compose ps 2>&1 | head -5
+```
+
+---
+
+## Шаг 1: Снапшот "ДО"
+
+Для каждого обнаруженного пакета и раннера — подсчитай количество тестов:
+
+```bash
+# pytest
+uv run pytest <tests-dir> --collect-only -q 2>&1 | tail -3
+
+# vitest
+npx vitest run --reporter=verbose 2>&1 | grep -c "✓\|×\|↓"
+```
+
+Запиши число тестов по каждому пакету и слою — это **baseline** для дельты.
+
+---
 
 ## Шаг 2: Запуск ВСЕХ тестов
 
-Запускай **последовательно**, пакет за пакетом. Не останавливайся при ошибках —
+Запускай **последовательно**, пакет за пакетом. **Не останавливайся при ошибках** —
 собирай полную картину.
 
-### 2.1 Backend — все слои (включая integration!)
+Для каждого пакета:
 
-```bash
-cd packages/back
+1. **Lint + types** (инструменты из шага 0)
+2. **Тесты по слоям** (каждый слой отдельно для детализации)
+3. Используй `| tail -N` чтобы не захламлять вывод, но сохраняй строки с ошибками
 
-# Lint + types
-uv run ruff check . 2>&1 | tail -5
-uv run black --check . 2>&1 | tail -5
-uv run mypy src/ tests/ 2>&1 | tail -10
+### E2E
 
-# Unit
-uv run pytest tests/unit -v 2>&1 | tail -20
+Если E2E-конфиг найден и Docker запущен — запусти.
+Если Docker не запущен — **спроси пользователя**, хочет ли он поднять контейнеры.
+Не поднимай сам без подтверждения.
 
-# State
-uv run pytest tests/state -v 2>&1 | tail -20
+### Integration-тесты
 
-# Security
-uv run pytest tests/security -v 2>&1 | tail -20
+Если среди слоёв есть `integration` — предупреди пользователя:
 
-# Cases
-uv run pytest tests/cases -v 2>&1 | tail -20
+> Integration-тесты могут обращаться к реальным внешним API и стоить денег.
+> Если ключи фейковые — тесты будут пропущены автоматически.
 
-# Architecture
-uv run pytest tests/architecture -v 2>&1 | tail -20
-
-# Integration (ДОРОГИЕ — реальные API ключи!)
-uv run pytest tests/integration -v 2>&1 | tail -20
-```
-
-### 2.2 Collector
-
-```bash
-cd packages/collector && make check
-```
-
-### 2.3 Frontend
-
-```bash
-cd packages/front
-
-# Lint + types
-npm run lint 2>&1 | tail -10
-npx tsc -b --noEmit 2>&1 | tail -10
-
-# Unit tests (vitest)
-npx vitest run --reporter=verbose 2>&1 | tail -30
-```
-
-### 2.4 E2E (если Docker запущен)
-
-Проверь, запущен ли Docker:
-
-```bash
-docker compose ps 2>&1 | head -10
-```
-
-Если сервисы запущены — запусти E2E:
-
-```bash
-cd packages/e2e && npx playwright test 2>&1 | tail -30
-```
-
-Если Docker не запущен — **спроси пользователя**, хочет ли он поднять контейнеры
-(`make up`) для E2E. Не поднимай сам без подтверждения.
+---
 
 ## Шаг 3: Отчёт
 
-После всех прогонов выведи **финальный отчёт** в формате:
+После всех прогонов выведи **финальный отчёт**:
 
 ```
 ╔══════════════════════════════════════════════════════════════╗
@@ -126,15 +137,8 @@ cd packages/e2e && npx playwright test 2>&1 | tail -30
 ╠══════════════════════════════════════════════════════════════╣
 ║ Пакет / Слой          │ Всего │ Passed │ Failed │ Skipped  ║
 ╠═══════════════════════╪═══════╪════════╪════════╪══════════╣
-║ back/unit             │   XX  │   XX   │   XX   │    XX    ║
-║ back/state            │   XX  │   XX   │   XX   │    XX    ║
-║ back/security         │   XX  │   XX   │   XX   │    XX    ║
-║ back/cases            │   XX  │   XX   │   XX   │    XX    ║
-║ back/architecture     │   XX  │   XX   │   XX   │    XX    ║
-║ back/integration      │   XX  │   XX   │   XX   │    XX    ║
-║ collector             │   XX  │   XX   │   XX   │    XX    ║
-║ front                 │   XX  │   XX   │   XX   │    XX    ║
-║ e2e                   │   XX  │   XX   │   XX   │    XX    ║
+║ <package>/<layer>     │   XX  │   XX   │   XX   │    XX    ║
+║ ...                   │   XX  │   XX   │   XX   │    XX    ║
 ╠═══════════════════════╪═══════╪════════╪════════╪══════════╣
 ║ ИТОГО                 │   XX  │   XX   │   XX   │    XX    ║
 ╠══════════════════════════════════════════════════════════════╣
@@ -142,14 +146,13 @@ cd packages/e2e && npx playwright test 2>&1 | tail -30
 ╚══════════════════════════════════════════════════════════════╝
 ```
 
-### Дельта (если есть baseline)
+Строки таблицы формируются динамически из обнаруженных пакетов и слоёв.
 
-Если получилось собрать снапшот "до" — добавь колонку дельты:
+### Дельта (если есть baseline)
 
 ```
 ║ Пакет / Слой          │ Всего │ Δ     │ Passed │ Failed │ Skipped  ║
-║ back/unit             │   42  │ +3 ↑  │   42   │    0   │    0     ║
-║ back/integration      │    5  │  0    │    3   │    0   │    2     ║
+║ <package>/<layer>     │   42  │ +3 ↑  │   42   │    0   │    0     ║
 ```
 
 - `+N ↑` — добавлено тестов
@@ -158,18 +161,16 @@ cd packages/e2e && npx playwright test 2>&1 | tail -30
 
 ### Итоговый вердикт
 
-В конце отчёта — однозначный вердикт:
-
-- Если **0 failed**: `✅ ВСЕ ТЕСТЫ ПРОШЛИ`
-- Если есть failed: `❌ ЕСТЬ ПАДЕНИЯ — см. детали выше`
-- Если integration skipped: `⚠️ Integration-тесты пропущены (фейковые ключи)`
+- **0 failed**: `✅ ВСЕ ТЕСТЫ ПРОШЛИ`
+- Есть failed: `❌ ЕСТЬ ПАДЕНИЯ — см. детали выше`
+- Integration skipped: `⚠️ Integration-тесты пропущены (фейковые ключи)`
 
 ### Детали падений
 
 Если есть failed-тесты — выведи для каждого:
 - Имя теста
 - Файл и строку
-- Короткое описание ошибки (последние 5-10 строк traceback)
+- Короткое описание ошибки (последние 5–10 строк traceback)
 
 ---
 
@@ -177,16 +178,15 @@ cd packages/e2e && npx playwright test 2>&1 | tail -30
 
 - Без аргументов — запускай ВСЁ
 - `skip-e2e` — пропусти E2E (не требуй Docker)
-- `only-back` — только backend (все слои включая integration)
-- `only-front` — только frontend (lint + types + vitest)
-- `only-integration` — только integration-тесты backend
+- `only-<package>` — только указанный пакет (все слои)
+- `only-integration` — только integration-тесты
 
 ---
 
 # Важно
 
-- **НЕ останавливайся при падении** — собирай полную картину по всем пакетам
-- **Integration-тесты стоят денег** (OpenAI API) — предупреди об этом в начале
+- **НЕ останавливайся при падении** — собирай полную картину
+- **НЕ угадывай структуру** — определяй из файловой системы
+- **Integration-тесты могут стоить денег** — предупреди
 - **E2E требуют Docker** — проверь перед запуском
-- Используй `| tail -N` чтобы не захламлять вывод, но сохраняй строки с ошибками
-- Считай реальные числа из вывода pytest/vitest, не угадывай
+- Считай реальные числа из вывода раннеров, не угадывай

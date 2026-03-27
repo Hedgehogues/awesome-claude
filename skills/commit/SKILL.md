@@ -3,13 +3,14 @@ name: commit
 description: >
   Create a well-structured git commit following project conventions.
   Analyzes staged and unstaged changes, drafts a detailed commit message
-  with What/Why/Details sections, and commits. Follows git.md rules.
+  with What/Why/Details sections, and commits. Auto-detects task ID format
+  from git history.
 argument-hint: "[optional: TASK-ID to use in commit title, e.g. 'TG-42']"
 ---
 
 # Commit Skill
 
-Создай коммит по конвенциям проекта (см. `.claude/rules/git.md`).
+Создай коммит по конвенциям проекта.
 
 ## Порядок выполнения
 
@@ -24,8 +25,8 @@ git status
 # Staged + unstaged изменения
 git diff HEAD
 
-# Последние коммиты для понимания стиля
-git log --oneline -5
+# Последние коммиты для понимания стиля и формата task ID
+git log --oneline -10
 ```
 
 ### Шаг 2: Проанализируй изменения
@@ -40,11 +41,18 @@ git log --oneline -5
 ### Шаг 3: Определи TASK-ID
 
 - Если `$ARGUMENTS` содержит task ID — используй его
-- Если нет — используй `[TG-0]` как placeholder
+- Если нет — определи формат из `git log`: найди паттерн в заголовках коммитов
+  (например `[TG-42]`, `PROJ-123`, `#42`, `feat:`)
+- Если формат не определяется — спроси пользователя
 
-### Шаг 4: Составь commit message
+### Шаг 4: Определи формат commit message
 
-Формат строго по `.claude/rules/git.md`:
+Проверь наличие конвенций:
+- Прочитай `.claude/rules/git.md` если существует
+- Или определи стиль из `git log --oneline -10`
+
+Если конвенции найдены — следуй им строго.
+Если нет — используй формат:
 
 ```
 [TASK-ID]: short summary (imperative mood, lowercase)

@@ -1,8 +1,7 @@
 ---
 paths:
   - "Makefile"
-  - "backend/Makefile"
-  - "frontend/Makefile"
+  - "**/Makefile"
   - "docker-compose.yml"
 ---
 
@@ -14,46 +13,40 @@ Three-level Makefile hierarchy:
 
 | File | Responsibility |
 |------|---------------|
-| `Makefile` (root) | Orchestration, Docker, combined targets. Delegates via `$(MAKE) -C backend` / `$(MAKE) -C frontend` |
-| `backend/Makefile` | Backend-only: install, migrate, run, test, lint |
-| `frontend/Makefile` | Frontend-only: install, run, build, test, e2e, lint |
+| `Makefile` (root) | Orchestration, Docker, combined targets. Delegates via `$(MAKE) -C <package>` |
+| `<package>/Makefile` | Package-only: install, migrate, run, test, lint |
 
 ## Key Root Targets
 
 | Target | What it does |
 |--------|-------------|
 | `make up` | Start ALL services via Docker Compose |
-| `make dev` | Dev mode: db + migrations + backend (port 8002) |
-| `make test` | ALL tests: backend (pytest) + frontend unit (vitest) + frontend E2E (playwright) |
+| `make dev` | Dev mode: database + migrations + backend |
+| `make test` | ALL tests across all packages |
 | `make check` | Full CI check: `lint` + `test` |
-| `make lint` | All linters: backend (ruff) + frontend (eslint) |
-| `make install` | Install all dependencies (backend + frontend) |
+| `make lint` | All linters across all packages |
+| `make install` | Install all dependencies |
 
 ## Delegation Pattern
 
 Root Makefile uses wildcard delegation:
-- `make backend-<target>` → runs `make <target>` inside `backend/`
-- `make frontend-<target>` → runs `make <target>` inside `frontend/`
+- `make <package>-<target>` → runs `make <target>` inside `<package>/`
 - Example: `make backend-test` → `$(MAKE) -C backend test`
 
 ## Rules
 
 - `make test` MUST run every type of test. If a new test suite is added, it MUST be included.
 - `make check` is the single "is everything OK?" command. This is what CI should call.
-- Sub-targets (`backend-test`, `frontend-test`) exist for convenience during development.
-- E2E tests require the frontend to be running on `:3001` (via `make up` or manually).
-- **Never put `cd backend &&` in root Makefile** — use `$(MAKE) -C backend` instead.
+- Sub-targets exist for convenience during development.
+- E2E tests require services to be running (via `make up` or manually).
+- **Never put `cd <package> &&` in root Makefile** — use `$(MAKE) -C <package>` instead.
 
 ## Adding New Targets
 
-- Backend-only target → add to `backend/Makefile`, automatically available as `make backend-<name>` from root
-- Frontend-only target → add to `frontend/Makefile`, automatically available as `make frontend-<name>` from root
+- Package-only target → add to `<package>/Makefile`, automatically available as `make <package>-<name>` from root
 - Cross-cutting target → add to root `Makefile`, delegate to sub-Makefiles
 
 ## Ports
 
-| Service | Docker (`make up`) | Local (`make dev`) |
-|---------|-------------------|-------------------|
-| PostgreSQL | 5434 | 5434 |
-| Backend | 8001 | 8002 |
-| Frontend | 3001 | 5173 |
+Define port mappings in `docker-compose.yml`. Document them in `.env.example`.
+Do not hardcode port numbers in Makefiles — use environment variables or docker-compose defaults.

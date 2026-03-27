@@ -15,9 +15,9 @@ Every piece of data that persists beyond a single page view MUST be stored in th
 backend database and exposed via API endpoints. This includes:
 
 - Domain entity fields (name, status, configuration, timestamps)
-- Computed state (online/offline, watching/idle, anomaly counts)
-- Process state (is_watching, watch_interval, is_active)
-- Relationships (collector belongs to project, anomaly belongs to run)
+- Computed state (online/offline, active/idle, derived counts)
+- Process state (is_running, interval, is_active)
+- Relationships (worker belongs to project, alert belongs to session)
 
 **Violation example:** Storing "last selected tab" in localStorage that affects
 which API calls are made. If the tab selection changes business behavior, it
@@ -26,8 +26,8 @@ belongs on the backend.
 ### R2: Frontend never computes domain logic
 
 The frontend MUST NOT compute values that the backend already computes. If the
-backend has `computed_status()`, the frontend displays `collector.status` from
-the API response — it does not re-implement the 10-minute threshold logic.
+backend has `computed_status()`, the frontend displays `entity.status` from
+the API response — it does not re-implement the threshold logic.
 
 **Allowed on frontend:**
 - Pure UI state: open/closed modals, form input values, loading spinners
@@ -35,8 +35,8 @@ the API response — it does not re-implement the 10-minute threshold logic.
 - Date formatting (relative time display)
 
 **Forbidden on frontend:**
-- Business rule evaluation (is this collector online? is this run complete?)
-- State transitions (what happens when you revoke a collector?)
+- Business rule evaluation (is this worker online? is this session complete?)
+- State transitions (what happens when you deactivate a worker?)
 - Validation that affects data integrity (the backend validates too, always)
 
 ### R3: Every state change goes through the backend
@@ -53,14 +53,14 @@ Never:
 User action → Frontend mutates local state → (maybe) tells backend later
 ```
 
-**Concrete examples in this project:**
+**Examples:**
 
 | Action | Correct | Wrong |
 |---|---|---|
-| Start scanning | `POST /collectors/{id}/start` → re-fetch | Toggle local `isWatching` flag |
-| Rename collector | `PATCH /collectors/{id}` → re-fetch | Update local state, sync later |
-| Revoke collector | `DELETE /collectors/{id}` → re-fetch | Remove from local array |
-| Resolve anomaly | `POST /runs/{id}/anomalies/{id}/resolve` → re-fetch | Set `resolved_at` locally |
+| Start process | `POST /workers/{id}/start` → re-fetch | Toggle local `isRunning` flag |
+| Rename entity | `PATCH /workers/{id}` → re-fetch | Update local state, sync later |
+| Delete entity | `DELETE /workers/{id}` → re-fetch | Remove from local array |
+| Resolve alert | `POST /sessions/{id}/alerts/{id}/resolve` → re-fetch | Set `resolved_at` locally |
 
 ### R4: Backend exposes computed fields in API responses
 
@@ -69,9 +69,9 @@ in the API response as a computed field. The frontend never derives it.
 
 **Examples:**
 - `status: "online" | "offline"` — computed from `last_seen_at` threshold
-- `collector_count: 3` — computed from active collectors per project
-- `is_watching: true` — stored state, not derived on frontend
-- `watch_interval: 30` — stored config, not a frontend constant
+- `worker_count: 3` — computed from active workers per project
+- `is_running: true` — stored state, not derived on frontend
+- `interval: 30` — stored config, not a frontend constant
 
 ### R5: Domain entity methods live in `src/domain/`
 
@@ -79,9 +79,9 @@ State transitions are domain methods on the entity, called by use cases:
 
 ```python
 # Domain entity (backend)
-def start_watching(self, interval: int = 30) -> None:
-    self.is_watching = True
-    self.watch_interval = interval
+def start(self, interval: int = 30) -> None:
+    self.is_running = True
+    self.interval = interval
     self.version += 1
 
 # Use case calls the method, repository persists
@@ -90,7 +90,7 @@ def start_watching(self, interval: int = 30) -> None:
 ```
 
 The frontend never replicates this logic. It only knows that after calling
-`POST /collectors/{id}/start`, the response will have `is_watching: true`.
+`POST /workers/{id}/start`, the response will have `is_running: true`.
 
 ### R6: Optimistic updates are acceptable but the backend is authoritative
 
@@ -101,8 +101,8 @@ the API confirms) are allowed, but:
 2. If the API fails, the UI MUST revert to the actual backend state
 3. The backend response is always the final truth
 
-Currently this project uses **pessimistic updates** (wait for API, then re-fetch).
-This is simpler and preferred unless latency is a real UX problem.
+Pessimistic updates (wait for API, then re-fetch) are simpler and preferred
+unless latency is a real UX problem.
 
 ## Architecture Consequence
 

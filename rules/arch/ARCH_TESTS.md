@@ -5,7 +5,7 @@ paths:
   - "src/domain/**"
   - "src/infrastructure/database/**"
   - "src/infrastructure/llm/**"
-  - "src/presentation/telegram/views/**"
+  - "src/presentation/**"
 ---
 
 # Architecture Tests — автоматическая валидация DDD-контрактов
@@ -68,9 +68,8 @@ paths:
   агрегата** (root + child entities + value objects). Чужие модели запрещены.
 - Разрешённые модели определяются маппингом `AGGREGATE_MODELS` в
   `tests/architecture/conftest.py` — единый источник правды.
-- Имя файла repo определяет агрегат: `requirement_document_repo.py` →
-  aggregate `requirement_document` → `{RequirementDocumentModel,
-  DocumentBlockModel, BlockVersionModel, BlockCommentModel}`.
+- Имя файла repo определяет агрегат: `order_repo.py` →
+  aggregate `order` → `{OrderModel, OrderItemModel, OrderStatusModel}`.
 
 ### R4: Версионирование агрегатов (`test_aggregate_versioning.py`)
 - Каждый агрегат (dataclass в entity.py) имеет поле `version: int`.
@@ -85,15 +84,13 @@ paths:
 - Связь между агрегатами — только по значению ID (UUID), без FK-constraint.
 
 ### R6: Изоляция view-модулей (`test_view_isolation.py`)
-- `views/user_context.py` не импортирует из `src.domain.matching`.
-- `views/matching.py` не импортирует из `src.domain.user_context`.
-- `views/common.py` не импортирует из `src.domain.*` вообще.
+- View-модули одного bounded context не импортируют из домена другого.
+- Общие view-модули (`common.py`) не импортируют из `src.domain.*` вообще.
 
 ### R7: Изоляция handlers (`test_handler_isolation.py`)
-- `handlers.py` не импортирует из `src.application.use_cases.*` (кроме `errors`).
-- `handlers.py` не импортирует из `src.infrastructure.database.*_repo`.
-- `callback_handlers.py` — аналогичные правила.
-- Handlers используют service layer (`UserContextService`, `MatchingService`).
+- Handlers не импортируют напрямую из `src.application.use_cases.*` (кроме `errors`).
+- Handlers не импортируют из `src.infrastructure.database.*_repo`.
+- Handlers используют service layer.
 
 ### R8: LLM Security (`test_llm_security.py`)
 - LLM-derived fields (`score`, `explanation`, `risks`, `generated_question`, `title`)
@@ -124,8 +121,7 @@ paths:
 
 **R9c: Негативные проверки (удалённые/перенесённые поля)**
 - Явные assert-ы на отсутствие конкретных колонок, которые были удалены или
-  перенесены в другой агрегат (например, `ProjectModel` не содержит
-  `agent_token` — токены живут в `AgentTokenModel`).
+  перенесены в другой агрегат.
 - Зачем: защита от регрессии — если кто-то случайно вернёт удалённое поле,
   тест сломается с объяснением, почему это поле было убрано.
 
@@ -135,7 +131,7 @@ paths:
 на другие агрегаты. Поля типа `uuid.UUID`, оканчивающиеся на `_id`,
 сопоставляются с именами агрегатов через суффиксную декомпозицию.
 
-- `project_id` разрешён глобально (корневой агрегат).
+- Корневой агрегат (например `project_id`) разрешён глобально.
 - Самоссылки (поле суффиксно совпадает с текущим агрегатом) игнорируются.
 - Ложные совпадения (внешние ID, собственные идентификаторы) — в `IGNORED_ENTITY_FIELDS`.
 - Все остальные кросс-агрегатные UUID-ссылки — нарушение.

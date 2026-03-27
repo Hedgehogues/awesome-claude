@@ -4,7 +4,7 @@
 
 ### ConfirmDialog
 
-Reusable confirmation modal at `components/ConfirmDialog.tsx`:
+Projects should have a reusable confirmation modal. Expected API:
 
 ```tsx
 <ConfirmDialog
@@ -19,10 +19,6 @@ Reusable confirmation modal at `components/ConfirmDialog.tsx`:
 ```
 
 Uses `createPortal` to render at document body. Follows existing modal CSS patterns.
-
-## Visual Cohesion (see also `arch/VISUAL_COHESION.md`)
-
-UI-области одного агрегата с одной доменной операцией → один CSS-класс, одна ось, одна CSS-переменная для layout-значений. Разный визуал только на границе bounded context.
 
 ## UI Principles
 

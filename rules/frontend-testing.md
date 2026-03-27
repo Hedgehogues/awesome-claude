@@ -1,9 +1,10 @@
 ---
 paths:
-  - "packages/front/src/**"
-  - "packages/front/e2e/**"
-  - "packages/front/playwright.config.ts"
-  - "packages/front/vite.config.ts"
+  - "**/src/**/*.test.tsx"
+  - "**/src/**/*.test.ts"
+  - "**/e2e/**"
+  - "**/playwright.config.*"
+  - "**/vite.config.*"
 ---
 
 # Frontend Testing Conventions
@@ -20,7 +21,7 @@ paths:
 
 ## Test File Locations
 
-- Unit tests: `src/<module>/__tests__/<Component>.test.tsx` (colocated with source)
+- Unit tests: `src/<module>/<Component>.test.tsx` (colocated with source)
 - E2E tests: `e2e/*.spec.ts`
 - Screenshot baselines: `e2e/screenshots/` (committed to repo)
 - Setup file: `src/test/setup.ts`
@@ -30,7 +31,7 @@ paths:
 ```bash
 npm test              # Vitest unit tests (single run)
 npm run test:watch    # Vitest in watch mode
-npm run test:e2e      # Playwright E2E (requires running frontend on :3001)
+npm run test:e2e      # Playwright E2E (requires running frontend)
 npm run test:e2e:update  # Update screenshot baselines
 ```
 
@@ -44,10 +45,10 @@ npm run test:e2e:update  # Update screenshot baselines
 - API client: correct HTTP method, URL, body, error handling
 
 ### What NOT to test
-- Exact Tailwind class strings (too brittle) — test class *presence* instead
+- Exact CSS class strings (too brittle) — test class *presence* instead
 - Internal component state directly
-- Third-party library internals (react-router, lucide icons)
-- Trivial components (< 15 lines, no logic, single return with text/class) — their behavior is covered by tests of parent components that use them
+- Third-party library internals (router, icon libraries)
+- Trivial components (< 15 lines, no logic, single return with text/class) — covered by parent component tests
 - Mock call assertions (`toHaveBeenCalledWith`) on internal functions — test visible output instead
 
 ### Patterns
@@ -59,7 +60,7 @@ render(<MyComponent prop="value" />);
 expect(screen.getByText("expected text")).toBeInTheDocument();
 
 // CSS class check
-expect(element.className).toContain("bg-indigo-600");
+expect(element.className).toContain("active");
 
 // User interaction
 import userEvent from "@testing-library/user-event";
@@ -81,10 +82,10 @@ mockFetch.mockReturnValueOnce(jsonResponse({ data: [] }));
 
 ### What to test
 - Page layout structure (sidebar width, main offset, grid columns)
-- Tailwind CSS is loaded (body has dark bg, not white)
+- CSS framework is loaded (correct background colors, not unstyled white)
 - Navigation between pages works
 - Key visual elements: active nav link highlighting, card borders, button styling, font loading
-- **Screenshot regression** for each page (Dashboard, Repositories, Interests, Reports)
+- **Screenshot regression** for each main page
 
 ### Screenshot tests
 
@@ -96,11 +97,11 @@ await expect(page).toHaveScreenshot("page-name.png", { fullPage: true });
 
 - Max diff pixel ratio: 1% (`maxDiffPixelRatio: 0.01` in config)
 - Viewport: 1440x900 (desktop)
-- Run `npm run test:e2e:update` after intentional visual changes
+- Run screenshot update command after intentional visual changes
 
 ### Playwright config
 
-Located at `frontend/playwright.config.ts`. Screenshots stored in `e2e/screenshots/`.
+Located at `playwright.config.ts`. Screenshots stored in `e2e/screenshots/`.
 Browser: Chromium headless only.
 
 ## Vitest Config
@@ -110,7 +111,3 @@ Configured in `vite.config.ts` under `test` key:
 - `environment: "jsdom"` — DOM simulation
 - `setupFiles: "./src/test/setup.ts"` — loads jest-dom matchers
 - `css: true` — processes CSS imports
-
-## SQLite UUID Gotcha (shared with backend integration tests)
-
-When inserting models with UUID foreign keys from API response strings (e.g., `repo_id` from JSON), always convert: `uuid.UUID(string_id)`. SQLAlchemy's UUID type in SQLite requires actual UUID objects, not strings.
