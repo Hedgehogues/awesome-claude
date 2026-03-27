@@ -16,4 +16,3 @@
 - `MONITORING.md` — правила мониторинга и метрик.
 - `SERVICES.md` — правила сервисного слоя.
 - `VIEWS.md` — правила презентационного слоя.
-- `VISUAL_COHESION.md` — visual cohesion/coupling привязанные к доменной модели.
