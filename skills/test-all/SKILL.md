@@ -5,188 +5,153 @@ description: >
   (real API keys, real DB) and E2E (Playwright). Auto-detects project structure,
   test runners, and lint tools. Reports full statistics with delta vs previous run.
 argument-hint: "[optional: 'skip-e2e', 'only-<package>' to limit scope]"
-model: opus
-effort: max
----
-
-# Роль
-
-Ты — CI-оператор, который запускает **все без исключения** тесты в проекте
-и выдаёт детальный отчёт. Ничего не пропускаешь.
-
-Язык общения: **русский**. Технические термины — на языке оригинала.
-
+model: haiku
+allowed-tools: Bash(uv *), Bash(npx *), Bash(npm *), Bash(docker *), Bash(ls *), Glob, Read
 ---
 
 # Задача
 
-$ARGUMENTS
+Запусти **все** тесты и выдай детальный отчёт. $ARGUMENTS
 
----
-
-# Алгоритм
-
-## Шаг 0: Разведка структуры проекта
-
-**Обязателен перед запуском.** Определи автоматически:
+## Контекст (предвычислено)
 
 ### Пакеты
+!`ls packages/*/Makefile packages/*/package.json packages/*/pyproject.toml 2>/dev/null`
 
-```bash
-# Монорепо: ищи packages/*/Makefile или packages/*/package.json
-ls packages/*/Makefile packages/*/package.json packages/*/pyproject.toml 2>/dev/null
+### Тестовые слои
+!`ls -d packages/*/tests/*/ 2>/dev/null`
 
-# Или single-repo: ищи в корне
-ls Makefile package.json pyproject.toml 2>/dev/null
-```
+### Инфра
+!`ls docker-compose.yml docker-compose.yaml 2>/dev/null`
+!`ls packages/*/alembic.ini 2>/dev/null`
+!`ls packages/*/playwright.config.* 2>/dev/null`
 
-### Тест-раннеры (для каждого пакета)
+## 0. Разведка
 
-| Сигнал | Раннер | Команда сбора | Команда запуска |
-|--------|--------|---------------|-----------------|
-| `pyproject.toml` + `pytest` в deps | pytest | `uv run pytest --collect-only -q` | `uv run pytest -v` |
-| `package.json` + `vitest` в deps | vitest | `npx vitest run --reporter=verbose` | `npx vitest run` |
-| `package.json` + `jest` в deps | jest | `npx jest --listTests` | `npx jest` |
+Пакеты и слои уже выше — не нужно вызывать `ls`.
+
+### Тест-раннеры
+
+| Сигнал | Раннер | Сбор | Запуск |
+|--------|--------|------|--------|
+| `pyproject.toml` + pytest | pytest | `uv run pytest --collect-only -q` | `uv run pytest -v` |
+| `package.json` + vitest | vitest | `npx vitest run --reporter=verbose` | `npx vitest run` |
+| `package.json` + jest | jest | `npx jest --listTests` | `npx jest` |
 | `playwright.config` | playwright | — | `npx playwright test` |
 
-### Тест-слои (для pytest-пакетов)
+### Тестовые слои (pytest)
 
 ```bash
-# Определи какие слои тестов существуют
 ls -d <package>/tests/*/ 2>/dev/null
 ```
 
-Типичные слои: `unit`, `integration`, `architecture`, `state`, `security`, `cases`, `e2e`.
-Используй **те слои, которые реально существуют** — не угадывай.
+Типичные: `unit`, `integration`, `architecture`, `state`, `security`, `cases`, `e2e`. Используй **реально существующие**.
 
 ### Линтеры и тайпчекеры
 
-| Сигнал | Инструмент | Команда |
-|--------|-----------|---------|
-| `ruff` в pyproject.toml | ruff | `uv run ruff check .` |
-| `black` в pyproject.toml | black | `uv run black --check .` |
-| `mypy` в pyproject.toml | mypy | `uv run mypy src/ tests/` |
-| `eslint` в package.json | eslint | `npm run lint` |
-| `tsconfig.json` | tsc | `npx tsc -b --noEmit` |
+| Сигнал | Команда |
+|--------|---------|
+| ruff в pyproject.toml | `uv run ruff check .` |
+| mypy в pyproject.toml | `uv run mypy src/ tests/` |
+| eslint в package.json | `npm run lint` |
+| tsconfig.json | `npx tsc -b --noEmit` |
 
-### E2E
-
-Проверь наличие E2E-пакета или конфига:
+### Инфра
 
 ```bash
-ls **/playwright.config.* 2>/dev/null
+ls docker-compose.yml docker-compose.yaml 2>/dev/null
+docker compose ps 2>&1 | head -10
+ls **/alembic.ini */alembic.ini 2>/dev/null
 ```
 
-Если найден — проверь, запущен ли Docker:
+Docker Compose → строка `infra/docker`. Alembic → строка `infra/migrations`.
 
-```bash
-docker compose ps 2>&1 | head -5
-```
+E2E: `ls **/playwright.config.* 2>/dev/null`. Найден + Docker запущен → запускай.
 
----
+## 1. Снапшот "ДО"
 
-## Шаг 1: Снапшот "ДО"
+Подсчитай количество тестов для каждого пакета/слоя — baseline для дельты.
 
-Для каждого обнаруженного пакета и раннера — подсчитай количество тестов:
+## 2. Запуск
 
-```bash
-# pytest
-uv run pytest <tests-dir> --collect-only -q 2>&1 | tail -3
-
-# vitest
-npx vitest run --reporter=verbose 2>&1 | grep -c "✓\|×\|↓"
-```
-
-Запиши число тестов по каждому пакету и слою — это **baseline** для дельты.
-
----
-
-## Шаг 2: Запуск ВСЕХ тестов
-
-Запускай **последовательно**, пакет за пакетом. **Не останавливайся при ошибках** —
-собирай полную картину.
+Последовательно, пакет за пакетом. **Не останавливайся при ошибках.**
 
 Для каждого пакета:
+1. Lint + types
+2. Тесты по слоям (каждый отдельно)
+3. `| tail -N` для компактности, сохраняй строки ошибок
 
-1. **Lint + types** (инструменты из шага 0)
-2. **Тесты по слоям** (каждый слой отдельно для детализации)
-3. Используй `| tail -N` чтобы не захламлять вывод, но сохраняй строки с ошибками
+**E2E:** Docker не запущен → **спроси пользователя**.
+**Integration:** предупреди: "могут обращаться к реальным API и стоить денег".
+**infra/docker:** `docker compose ps --format json 2>&1 | head -20`
+**infra/migrations:** `cd <back> && uv run alembic check 2>&1`
 
-### E2E
+## 3. Сводная таблица
 
-Если E2E-конфиг найден и Docker запущен — запусти.
-Если Docker не запущен — **спроси пользователя**, хочет ли он поднять контейнеры.
-Не поднимай сам без подтверждения.
+### Категории (только реально обнаруженные)
 
-### Integration-тесты
+`<pkg>/unit`, `<pkg>/integration`, `<pkg>/architecture`, `<pkg>/state`, `<pkg>/security`, `<pkg>/cases`, `<pkg>/e2e`, `<pkg>/lint`, `<pkg>/types`, `<pkg>/build`, `infra/docker`, `infra/migrations`
 
-Если среди слоёв есть `integration` — предупреди пользователя:
-
-> Integration-тесты могут обращаться к реальным внешним API и стоить денег.
-> Если ключи фейковые — тесты будут пропущены автоматически.
-
----
-
-## Шаг 3: Отчёт
-
-После всех прогонов выведи **финальный отчёт**:
+### Формат
 
 ```
-╔══════════════════════════════════════════════════════════════╗
-║                    ПОЛНЫЙ ТЕСТОВЫЙ ОТЧЁТ                    ║
-╠══════════════════════════════════════════════════════════════╣
-║ Пакет / Слой          │ Всего │ Passed │ Failed │ Skipped  ║
-╠═══════════════════════╪═══════╪════════╪════════╪══════════╣
-║ <package>/<layer>     │   XX  │   XX   │   XX   │    XX    ║
-║ ...                   │   XX  │   XX   │   XX   │    XX    ║
-╠═══════════════════════╪═══════╪════════╪════════╪══════════╣
-║ ИТОГО                 │   XX  │   XX   │   XX   │    XX    ║
-╠══════════════════════════════════════════════════════════════╣
-║ Lint: ✅/❌  │  Types: ✅/❌  │  Coverage: XX%              ║
-╚══════════════════════════════════════════════════════════════╝
+╔══════════════════════════════════════════════════════════════════════════════════════╗
+║                             ПОЛНЫЙ ТЕСТОВЫЙ ОТЧЁТ                                  ║
+╠════════════════════════╤═══════╤════════╤════════╤═════════╤═════╤═════════════════╣
+║ Категория              │ Всего │ Passed │ Failed │ Skipped │  Σ  │ Что проверяет   ║
+╠════════════════════════╪═══════╪════════╪════════╪═════════╪═════╪═════════════════╣
+║ 🟢 back/unit           │   48  │   48   │    0   │    0    │  48 │ Бизнес-логика   ║
+║ 🟡 back/integration    │    5  │    3   │    0   │    2    │   5 │ Внешние сервисы ║
+║ 🔴 front/unit          │   35  │   33   │    2   │    0    │  35 │ Интерфейс       ║
+║ 🟢 back/lint           │    —  │    ✅   │    —   │    —    │   1 │ Стиль кода      ║
+╠════════════════════════╪═══════╪════════╪════════╪═════════╪═════╪═════════════════╣
+║ ИТОГО (числовые)       │   88  │   84   │    2   │    2    │  88 │                 ║
+║ ИТОГО (pass/fail)      │       │  N ✅  │  N ❌  │  N ⚠️   │     │                 ║
+╚════════════════════════╧═══════╧════════╧════════╧═════════╧═════╧═════════════════╝
 ```
 
-Строки таблицы формируются динамически из обнаруженных пакетов и слоёв.
+### Правила таблицы
+
+**Цвет:** 🟢 all passed, 🟡 есть skipped / 0 failed, 🔴 есть failed. Бинарные (lint/types/build/infra): 🟢 ok, 🔴 fail.
+
+**Σ:** тесты = Passed+Failed+Skipped; бинарные = 1 ok / 0 fail.
+
+**ИТОГО (числовые):** SUM только тестовых строк. Реальные числа, не заглушки.
+
+**ИТОГО (pass/fail):** подсчёт строк по цвету: `N ✅` / `N ❌` / `N ⚠️`.
+
+**«Что проверяет»:** продуктовый комментарий (10–15 слов), понятный менеджеру.
 
 ### Дельта (если есть baseline)
 
-```
-║ Пакет / Слой          │ Всего │ Δ     │ Passed │ Failed │ Skipped  ║
-║ <package>/<layer>     │   42  │ +3 ↑  │   42   │    0   │    0     ║
-```
+Колонка `Δ` после `Всего`: `+N ↑` / `-N ↓` / `—`.
 
-- `+N ↑` — добавлено тестов
-- `-N ↓` — удалено тестов
-- `0` — без изменений
+### Вердикт
 
-### Итоговый вердикт
-
-- **0 failed**: `✅ ВСЕ ТЕСТЫ ПРОШЛИ`
-- Есть failed: `❌ ЕСТЬ ПАДЕНИЯ — см. детали выше`
-- Integration skipped: `⚠️ Integration-тесты пропущены (фейковые ключи)`
+- 0 🔴: `✅ ВСЕ ПРОВЕРКИ ПРОЙДЕНЫ`
+- Есть 🔴: `❌ ЕСТЬ ПАДЕНИЯ — см. детали ниже`
+- Есть 🟡: `⚠️ Часть проверок пропущена`
 
 ### Детали падений
 
-Если есть failed-тесты — выведи для каждого:
-- Имя теста
-- Файл и строку
-- Короткое описание ошибки (последние 5–10 строк traceback)
+Для каждого failed: имя теста, файл:строка, описание ошибки (5–10 строк traceback).
 
----
+## 4. Продуктовое резюме
 
-# Обработка аргументов
+Один абзац (3–5 предложений) понятный менеджеру. Без файлов и терминов.
 
-- Без аргументов — запускай ВСЁ
-- `skip-e2e` — пропусти E2E (не требуй Docker)
-- `only-<package>` — только указанный пакет (все слои)
-- `only-integration` — только integration-тесты
+> **Резюме:** Проведена полная проверка. [Что хорошо]. [Что требует внимания]. [Готовность].
 
----
+## Аргументы
 
-# Важно
+- Без аргументов → всё
+- `skip-e2e` → без E2E
+- `only-<package>` → только пакет
+- `only-integration` → только integration
 
-- **НЕ останавливайся при падении** — собирай полную картину
-- **НЕ угадывай структуру** — определяй из файловой системы
-- **Integration-тесты могут стоить денег** — предупреди
-- **E2E требуют Docker** — проверь перед запуском
-- Считай реальные числа из вывода раннеров, не угадывай
+## Важно
+
+- НЕ останавливайся при падении — полная картина
+- НЕ угадывай структуру — определяй из FS
+- Каждая обнаруженная категория ОБЯЗАНА быть в таблице
+- Реальные числа из раннеров, никаких заглушек

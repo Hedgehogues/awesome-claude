@@ -21,7 +21,7 @@ paths:
 Rule content...
 ```
 
-The ONLY exception is `arch/README.md` — a small index file loaded always.
+The ONLY exception is files without frontmatter (e.g. `STATE_OWNERSHIP.md`) — loaded always.
 
 ## Paths Scoping
 
@@ -40,7 +40,7 @@ Choose the narrowest paths that still cover all relevant files:
 ## File Organization
 
 - One topic per file, keep files focused
-- Group related files in subdirectories: `rules/arch/db/`, `rules/arch/components/`
+- Group related files in subdirectories: `rules/arch/`
 - File names: UPPER_CASE.md for rule files, lowercase for meta/config
 
 ## When to Propose New Rules

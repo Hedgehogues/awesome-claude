@@ -7,8 +7,7 @@ description: >
   Outputs a table report of dead features. Use when: cleaning up codebase, auditing
   feature completeness, or checking if all code is wired to the UI.
 argument-hint: "[optional: 'back', 'front', 'short', or specific area to audit]"
-model: opus
-effort: max
+model: sonnet
 ---
 
 # Роль

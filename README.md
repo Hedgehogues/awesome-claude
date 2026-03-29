@@ -9,7 +9,7 @@ Battle-tested rules, skills, and agents that turn Claude Code into a senior engi
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Claude Code](https://img.shields.io/badge/Claude_Code-compatible-blueviolet)](https://claude.ai/code)
 [![Setup](https://img.shields.io/badge/setup-30_seconds-brightgreen)](#-quick-start)
-[![Rules](https://img.shields.io/badge/rules-60%2B-green)](#-rules)
+[![Rules](https://img.shields.io/badge/rules-15-green)](#-rules)
 [![Skills](https://img.shields.io/badge/skills-10-orange)](#-skills)
 [![Agents](https://img.shields.io/badge/agents-3-red)](#-agents)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
@@ -45,28 +45,16 @@ Out of the box, Claude Code is powerful but generic. It doesn't know your archit
 
 ```
 .claude/
-├── rules/           60+ architecture & coding conventions
-│   ├── arch/        DDD, database, 12-factor, code quality
-│   │   ├── components/   aggregates, commands, events, queries
-│   │   ├── db/           migrations, indexes, constraints, security
-│   │   ├── environment/  12-factor app principles
-│   │   └── functions/    refactoring techniques & anti-patterns
+├── rules/           15 project-specific conventions (~60K chars)
+│   ├── arch/        DDD contracts, tests, security, state ownership
 │   ├── break-stop.md     hard stop when tests break
 │   ├── git.md            structured commit messages
 │   ├── frontend-*.md     UI design, testing, components
-│   └── ...
-├── skills/          10 slash commands
-│   ├── tdd/         test-driven development
-│   ├── commit/      structured git commits
-│   ├── triz/        TRIZ problem-solving (ARIZ-85V)
-│   ├── tracing/     incident & bug tracing
-│   ├── ui/          UI/UX engineering with TDD
-│   ├── pipe/        skill pipeline orchestrator
-│   └── ...
-└── agents/          3 specialized sub-agents
-    ├── planner.md
-    ├── code-review-sentinel.md
-    └── ui-ux-engineer.md
+│   └── meta-rules.md     how to write rules (see also docs/RULES_GUIDE.md)
+├── skills/          slash commands (/tdd, /commit, /tracing, ...)
+├── agents/          specialized sub-agents (planner, code-review, ui-ux)
+└── docs/
+    └── RULES_GUIDE.md    how to write rules that don't waste tokens
 ```
 
 ---
@@ -84,7 +72,7 @@ graph LR
     E --> F
 ```
 
-**Rules** use YAML frontmatter to scope when they activate. Claude only sees what's relevant -- not all 60+ rules at once:
+**Rules** use YAML frontmatter to scope when they activate. Claude only sees what's relevant:
 
 ```yaml
 ---
@@ -126,6 +114,8 @@ That's it. No config files. No setup scripts. No dependencies.
 ## Skills
 
 Type a slash command in Claude Code to activate a skill. Each skill runs a full workflow -- not just a prompt, but a multi-step process with verification.
+
+> **Writing your own?** See [Skill Design Principles](skills/SKILL_DESIGN.md) -- model selection, prompt compression, `!`command`` precomputation, hooks, and a checklist for shipping.
 
 | Command | What It Does | Model |
 |---------|-------------|-------|
@@ -186,88 +176,27 @@ Reviews against project rules with special focus on **test quality**. Flags triv
 
 ## Rules
 
-Rules load automatically based on file path matching. When you edit `src/domain/user.py`, Claude sees DDD rules. When you edit `migrations/`, it sees database rules. No manual selection needed.
+Rules load automatically based on file path matching. When you edit `src/domain/user.py`, Claude sees DDD rules. When you edit `tests/`, it sees testing conventions. No manual selection needed.
+
+> We deliberately keep rules lean: **15 files, ~60K chars**. Generic knowledge (DDD textbooks, 12-factor, Fowler refactoring catalog) was removed -- the model already knows it. Only project-specific conventions remain. See [Rules Guide](docs/RULES_GUIDE.md) for the rationale.
 
 <details>
-<summary><strong>Architecture -- DDD & Clean Architecture (11 rules)</strong></summary>
+<summary><strong>Architecture & DDD Contracts (7 rules)</strong></summary>
 
 | Rule | What It Enforces |
 |------|-----------------|
-| `AGREGATES.md` | Aggregate design: identity, invariants, consistency boundary |
-| `AGGREGATE_STRUCTURE.md` | Standard aggregate file layout |
-| `COMMANDS.md` | Command pattern: validation, execution, idempotency |
-| `EVENTS.md` | Domain events: naming, payload, ordering |
-| `QURIES.md` | Query separation: read models, projections |
-| `DOMAIN.md` | Pure domain layer: no infrastructure imports |
-| `ONE_AGGREGATE_ONE_REPO.md` | Repository-per-aggregate rule |
-| `SHARED_KERNEL.md` | Shared kernel boundaries and contracts |
-| `SERVICES.md` | Application service orchestration rules |
-| `VIEWS.md` | Presentation layer contracts |
+| `ARCH_TESTS.md` | Automated DDD contract validation (R1--R5) with auto-discovery via `src/domain/*/entity.py` |
+| `UNIT_TESTS.md` | Test conventions UT1--UT13: docstrings, structure, no shared mutable state |
+| `LLM_SECURITY.md` | LLM output as untrusted input, prompt injection prevention |
 | `STATE_OWNERSHIP.md` | Backend is the single source of truth for all mutable state |
+| `VISUAL_COHESION.md` | Same aggregate + same operation = one CSS pattern |
+| `SERVICES.md` | Handlers call services, not use cases directly (R7 test) |
+| `VIEWS.md` | Presentation layer: pure functions, per-aggregate separation (R6 test) |
 
 </details>
 
 <details>
-<summary><strong>Database Design (12 rules)</strong></summary>
-
-| Rule | What It Enforces |
-|------|-----------------|
-| `MIGRATIONS.md` | Safe migrations: reversible, no data loss |
-| `INDEXES.md` | Index strategy: when to add, naming, composite |
-| `CONSTRAINTS.md` | DB-level constraints: NOT NULL, CHECK, UNIQUE, FK |
-| `NORMAL_FORMS.md` | Normalization rules and when to denormalize |
-| `TRANSACTIONS.md` | Transaction boundaries and isolation levels |
-| `VERSIONING.md` | Schema versioning strategy |
-| `READ_MODEL.md` | Read-optimized projections |
-| `WRITE_MODEL.md` | Write model design |
-| `PERFORMANCE.md` | Query optimization, N+1 prevention |
-| `RETENTION.md` | Data retention and cleanup policies |
-| `SECURITY.md` | Least privilege, parameterized queries |
-| `SEEDS_FIXTURES.md` | Test data management |
-
-</details>
-
-<details>
-<summary><strong>12-Factor App (12 rules)</strong></summary>
-
-| Rule | What It Enforces |
-|------|-----------------|
-| `CODEBASE.md` | One codebase, many deploys |
-| `DEPENDENCIES.md` | Explicit dependency declaration |
-| `CONFIG.md` | Config in environment variables |
-| `BACKING_SERVICES.md` | Treat backing services as attached resources |
-| `BUILD_RELEASE_RUN.md` | Strict separation of build and run stages |
-| `PROCESS.md` | Stateless processes |
-| `PORT_BINDING.md` | Export services via port binding |
-| `CONCURRENCY.md` | Scale out via the process model |
-| `DISPOSABILITY.md` | Fast startup, graceful shutdown |
-| `DEV_PROD_PARITY.md` | Keep dev, staging, and prod similar |
-| `ADMIN_PROCESSES.md` | Run admin tasks as one-off processes |
-| `MAKEFILE.md` | Makefile as the universal entry point |
-
-</details>
-
-<details>
-<summary><strong>Code Quality & Refactoring (11 rules)</strong></summary>
-
-| Rule | What It Enforces |
-|------|-----------------|
-| `CHANGE_BREAKERS.md` | Patterns that make code hard to change |
-| `INFLATORS.md` | Code bloat detection and prevention |
-| `TRASHERS.md` | Dead code, unused imports, stale comments |
-| `DEPS.md` | Dependency management and coupling |
-| `OOP_DESIGN.md` | SOLID principles, composition over inheritance |
-| `CONDITIONS.md` | Simplifying conditional logic |
-| `DATA.md` | Data structure organization |
-| `FUNCTIONS.md` | Function design: SRP, pure functions |
-| `GENERALIZATIONS.md` | When and how to generalize |
-| `METHODS.md` | Method extraction and composition |
-| `SIMPLIFY.md` | Simplification techniques |
-
-</details>
-
-<details>
-<summary><strong>Workflow & Conventions (12 rules)</strong></summary>
+<summary><strong>Workflow & Conventions (8 rules)</strong></summary>
 
 | Rule | What It Enforces |
 |------|-----------------|
@@ -279,12 +208,6 @@ Rules load automatically based on file path matching. When you edit `src/domain/
 | `makefile.md` | Makefile hierarchy and delegation |
 | `monorepo-structure.md` | Monorepo layout conventions |
 | `ui-library.md` | 4-layer component architecture (tokens -> primitives -> shared -> domain) |
-| `LLM_SECURITY.md` | Prompt injection prevention, output validation |
-| `UNIT_TESTS.md` | Test contracts, not values; no shared mutable state |
-| `LOGS.md` | Structured logging format and conventions |
-| `MONITORING.md` | Metrics, alerts, and observability |
-| `ARCH_TESTS.md` | Automated DDD contract validation (R1--R5) |
-| `VISUAL_COHESION.md` | Domain-driven visual consistency across UI components |
 
 </details>
 
@@ -300,6 +223,8 @@ Rules load automatically based on file path matching. When you edit `src/domain/
 | Personal preferences | `~/.claude/CLAUDE.md` | not tracked |
 
 ### Adding Your Own Rules
+
+> **Before writing rules, read the [Rules Guide](docs/RULES_GUIDE.md)** — how to avoid paying tokens for textbook knowledge the model already has.
 
 Create a markdown file in `.claude/rules/` with path scoping:
 
@@ -335,31 +260,30 @@ vim .claude/skills/test-all/SKILL.md
 
 This collection is opinionated. It encodes a specific engineering philosophy:
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                                                         │
-│   Tests are specifications                              │
-│   ── no red test, no requirement                        │
-│                                                         │
-│   Backend owns all state                                │
-│   ── frontend is a stateless projection                 │
-│                                                         │
-│   Stop on red                                           │
-│   ── never silently fix broken tests, always ask        │
-│                                                         │
-│   DDD layers                                            │
-│   ── domain → application → infrastructure → presentation│
-│                                                         │
-│   Commits tell a story                                  │
-│   ── What changed, Why, and Details                     │
-│                                                         │
-│   12-factor app                                         │
-│   ── config in env, stateless processes, explicit deps  │
-│                                                         │
-│   Visual cohesion                                       │
-│   ── same aggregate + same operation = one CSS pattern  │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+mindmap
+  root(("Engineering<br/>Philosophy"))
+    **Tests are specifications**
+      No red test, no requirement
+      TDD: test first, implement second
+    **Backend owns all state**
+      Frontend is a stateless projection
+      No domain logic on the client
+    **Stop on red**
+      Never silently fix broken tests
+      Always ask the user first
+    **DDD layers**
+      domain → application
+      infrastructure → presentation
+    **Commits tell a story**
+      What changed, Why, Details
+      One logical change per commit
+    **Only project-specific rules**
+      Model knows textbooks already
+      Rules for YOUR conventions only
+    **Visual cohesion**
+      Same aggregate + same operation
+      = one CSS pattern
 ```
 
 If this matches how you work -- clone and go. If not -- fork and make it yours.
@@ -371,18 +295,14 @@ If this matches how you work -- clone and go. If not -- fork and make it yours.
 <details>
 <summary><strong>Does this work with any project or only Python/React?</strong></summary>
 
-The architecture rules (DDD, 12-factor, database, code quality) are **language-agnostic**. They apply to any backend with domain-driven design.
-
-The frontend rules target React + TypeScript + Vite, but the principles (TDD, accessibility, visual cohesion) transfer to any UI framework.
-
-Skills like `/deploy` and `/test-all` are project-specific by design -- edit them for your stack.
+The architecture rules (DDD contracts, state ownership, test conventions) are **language-agnostic**. The frontend rules target React + TypeScript + Vite, but principles transfer. Skills like `/deploy` and `/test-all` are project-specific by design -- edit them for your stack.
 
 </details>
 
 <details>
-<summary><strong>Will all 60+ rules load at once and slow Claude down?</strong></summary>
+<summary><strong>Won't all rules load at once and slow Claude down?</strong></summary>
 
-No. Rules use YAML `paths:` frontmatter to scope activation. Claude only loads rules relevant to the files being edited. Editing `src/domain/` loads DDD rules. Editing `migrations/` loads database rules. No overlap.
+No. Rules use YAML `paths:` frontmatter to scope activation -- Claude only loads rules relevant to the files being edited. We also keep the total footprint lean (~60K chars) by excluding textbook knowledge the model already has. See [Rules Guide](docs/RULES_GUIDE.md) for our approach.
 
 </details>
 
@@ -417,7 +337,7 @@ Three options:
 <details>
 <summary><strong>Do skills work with Claude Sonnet or only Opus?</strong></summary>
 
-Most skills specify `model: opus` in their frontmatter for maximum quality on complex tasks (TDD, TRIZ, tracing). Simple skills (commit, describe, session-report) use whatever model you're running. You can change the `model:` field in any skill's YAML frontmatter.
+Skills specify their model in YAML frontmatter. Complex skills (TDD, TRIZ, tracing) use Opus. Analytical skills (dead-features, fix-tests) use Sonnet. Mechanical skills (commit, deploy, describe, test-all) use Haiku for speed and cost efficiency. You can change the `model:` field in any skill's frontmatter.
 
 </details>
 
