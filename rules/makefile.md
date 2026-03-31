@@ -7,46 +7,69 @@ paths:
 
 # Makefile Conventions
 
-## Structure
+## Two-Level Hierarchy
 
-Three-level Makefile hierarchy:
+| Level | File | Responsibility |
+|-------|------|---------------|
+| Root | `Makefile` | Orchestration only. Delegates to packages, owns Docker and infra targets |
+| Package | `packages/<pkg>/Makefile` | Self-contained: lint, test, build, format, package-specific targets |
 
-| File | Responsibility |
-|------|---------------|
-| `Makefile` (root) | Orchestration, Docker, combined targets. Delegates via `$(MAKE) -C <package>` |
-| `<package>/Makefile` | Package-only: install, migrate, run, test, lint |
-
-## Key Root Targets
-
-| Target | What it does |
-|--------|-------------|
-| `make up` | Start ALL services via Docker Compose |
-| `make dev` | Dev mode: database + migrations + backend |
-| `make test` | ALL tests across all packages |
-| `make check` | Full CI check: `lint` + `test` |
-| `make lint` | All linters across all packages |
-| `make install` | Install all dependencies |
+Root Makefile **never contains build/test/lint logic directly** — it only calls sub-Makefiles.
 
 ## Delegation Pattern
 
-Root Makefile uses wildcard delegation:
-- `make <package>-<target>` → runs `make <target>` inside `<package>/`
-- Example: `make backend-test` → `$(MAKE) -C backend test`
+Root delegates via `$(MAKE) -C packages/<pkg> <target>`:
+
+```makefile
+check:
+	$(MAKE) -C packages/back check
+	$(MAKE) -C packages/front check
+```
+
+- **Never use `cd packages/<pkg> &&`** — `$(MAKE) -C` correctly propagates exit codes
+- Packages run **sequentially** (no `-j`): predictable output, simpler debugging
+- Each delegation line is independent — a failure stops the chain immediately
+
+## Required Targets
+
+Every package MUST expose these targets:
+
+| Target | Contract |
+|--------|----------|
+| `check` | **Single "is everything OK?" command.** Runs all quality gates: lint + types + tests. CI calls only this |
+| `lint` | Static analysis: linter + formatter check + type checker |
+| `test` | All automated tests relevant to the package |
+
+Optional but common:
+
+| Target | When needed |
+|--------|-------------|
+| `format` | Auto-fix formatting (vs `lint` which only checks) |
+| `build` | Compilation or bundle step (frontend, compiled languages) |
+| `migrate` | Database migrations |
+
+## Root-Only Targets
+
+These targets live exclusively in the root Makefile:
+
+| Category | Targets |
+|----------|---------|
+| Docker | `up`, `down` — manage `docker-compose.yml` |
+| Cross-cutting | `check`, `lint`, `test` — fan out to all packages |
+| Infra | Cluster management, vault init, deploy — delegate to infra package |
+| Selective scope | `test-front`, `test-all`, `e2e` — convenience aliases for specific scopes |
 
 ## Rules
 
-- `make test` MUST run every type of test. If a new test suite is added, it MUST be included.
-- `make check` is the single "is everything OK?" command. This is what CI should call.
-- Sub-targets exist for convenience during development.
-- E2E tests require services to be running (via `make up` or manually).
-- **Never put `cd <package> &&` in root Makefile** — use `$(MAKE) -C <package>` instead.
+1. **`make check` is the CI contract.** If a new quality gate is added (new test type, new linter), it MUST be reachable from `make check`
+2. **`make test` ≠ all tests.** `test` runs fast feedback tests (backend). Heavier suites (frontend, e2e, integration) have separate targets. `test-all` combines everything
+3. **E2E tests require running services.** They are never part of `check` — run after `make up`
+4. **Package runner is configurable.** Python packages use `RUNNER ?= uv run` so the runner can be overridden without editing the Makefile
+5. **Ports and URLs live in `docker-compose.yml` and `.env`**, never hardcoded in Makefiles
 
-## Adding New Targets
+## Adding a New Package
 
-- Package-only target → add to `<package>/Makefile`, automatically available as `make <package>-<name>` from root
-- Cross-cutting target → add to root `Makefile`, delegate to sub-Makefiles
-
-## Ports
-
-Define port mappings in `docker-compose.yml`. Document them in `.env.example`.
-Do not hardcode port numbers in Makefiles — use environment variables or docker-compose defaults.
+1. Create `packages/<name>/Makefile` with at least `check`, `lint`, `test`
+2. Add `$(MAKE) -C packages/<name> check` to root `check` target
+3. Add to root `lint` and `test` if applicable
+4. Update `.PHONY` in root Makefile
