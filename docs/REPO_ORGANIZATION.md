@@ -73,6 +73,169 @@ graph TB
 
 ---
 
+## DDD Structure Inside a Bounded Context
+
+Each bounded context is a self-contained domain with its own aggregates, repositories, and use cases.
+
+### Aggregate = Unit of Consistency
+
+```mermaid
+graph TD
+    subgraph AGG ["Aggregate: RequirementDocument"]
+        ROOT["RequirementDocument<br/><i>Aggregate Root</i><br/>document_id · title · status · version"]
+
+        ROOT --> BLOCK["DocumentBlock<br/><i>Child Entity</i><br/>block_id · content · order"]
+        ROOT --> VER["BlockVersion<br/><i>Value Object</i><br/>version_no · content · reason"]
+        ROOT --> COMMENT["BlockComment<br/><i>Child Entity</i><br/>comment_text · status"]
+
+        BLOCK --> VER
+        BLOCK --> COMMENT
+    end
+
+    subgraph RULES ["Invariants"]
+        R1["All mutations go through Root"]
+        R2["version++ on every command"]
+        R3["Children accessed only via Root methods"]
+    end
+
+    ROOT -.-> RULES
+
+    style ROOT fill:#4CAF50,color:#fff,stroke-width:3px
+    style BLOCK fill:#81C784,color:#fff
+    style VER fill:#C8E6C9,stroke:#4CAF50
+    style COMMENT fill:#81C784,color:#fff
+    style RULES fill:#FFF3E0,stroke:#FF9800
+```
+
+**Key rules:**
+- Only the **Aggregate Root** has a repository — children are loaded/saved through the root
+- Every mutating method increments `version` (optimistic locking)
+- External code never holds a reference to a child entity — always go through root methods
+
+### Domain Layer Anatomy
+
+```mermaid
+graph LR
+    subgraph "src/&lt;bc_name&gt;/domain/"
+        direction TB
+
+        subgraph agg1 ["order/"]
+            E1["entity.py<br/>Order (Root)<br/>OrderLine (Child)<br/>OrderStatus (Enum)"]
+            R1["repository.py<br/>OrderRepository (ABC)"]
+        end
+
+        subgraph agg2 ["customer/"]
+            E2["entity.py<br/>Customer (Root)"]
+            R2["repository.py<br/>CustomerRepository (ABC)"]
+        end
+
+        EX["exceptions.py<br/>OrderNotFoundError<br/>InvalidOrderStateError"]
+        PT["ports.py<br/>PaymentGatewayPort (ABC)"]
+    end
+
+    style agg1 fill:#E8F5E9,stroke:#4CAF50
+    style agg2 fill:#E8F5E9,stroke:#4CAF50
+    style EX fill:#FFEBEE,stroke:#F44336
+    style PT fill:#E3F2FD,stroke:#2196F3
+```
+
+**One aggregate = one subdirectory** with `entity.py` + `repository.py`. This convention enables auto-discovery: architecture tests find aggregates by globbing `*/entity.py`.
+
+### How Layers Connect
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Route as routes.py<br/>(Presentation)
+    participant UC as CreateOrderUseCase<br/>(Application)
+    participant Entity as Order.create()<br/>(Domain)
+    participant Repo as SqlAlchemyOrderRepo<br/>(Infrastructure)
+    participant DB as PostgreSQL
+
+    Client->>Route: POST /api/orders
+    Route->>Route: open transaction
+    Route->>UC: execute(customer_id, items)
+
+    UC->>Entity: Order.create(customer_id, items)
+    Note over Entity: Factory method<br/>UUID generated<br/>version = 1
+
+    Entity-->>UC: order
+
+    UC->>Repo: save(order)
+    Repo->>DB: INSERT
+
+    UC-->>Route: order
+    Route-->>Client: OrderResponse (201)
+```
+
+### Aggregate Mapping to Infrastructure
+
+```mermaid
+graph TD
+    subgraph "Domain (what)"
+        AGG["Order<br/>Aggregate Root"]
+        CHILD["OrderLine<br/>Child Entity"]
+    end
+
+    subgraph "Infrastructure (how)"
+        MODEL_R["OrderModel<br/>orders table"]
+        MODEL_C["OrderLineModel<br/>order_lines table"]
+        REPO["SqlAlchemyOrderRepository"]
+    end
+
+    subgraph "Wiring"
+        MODELS["models.py<br/>combined_metadata"]
+        DEPS["dependencies.py<br/>Composition Root"]
+    end
+
+    AGG -->|"1 aggregate"| REPO
+    AGG -->|"1 abstract repo"| REPO
+    REPO -->|uses| MODEL_R
+    REPO -->|uses| MODEL_C
+    MODEL_R --> MODELS
+    MODEL_C --> MODELS
+    REPO --> DEPS
+
+    style AGG fill:#E8F5E9,stroke:#4CAF50,stroke-width:2px
+    style REPO fill:#FFF3E0,stroke:#FF9800,stroke-width:2px
+    style MODELS fill:#607D8B,color:#fff
+    style DEPS fill:#607D8B,color:#fff
+```
+
+**1 aggregate = 1 abstract repo = 1 concrete repo = N ORM models.** Architecture tests enforce this via `test_one_aggregate_one_repo.py`.
+
+### Cross-BC Communication
+
+Bounded contexts do NOT import each other's domain code. Communication happens through:
+
+```mermaid
+graph LR
+    subgraph BC1 ["BC: Orders"]
+        UC1["PlaceOrderUseCase"]
+    end
+
+    subgraph BC2 ["BC: Inventory"]
+        UC2["ReserveStockUseCase"]
+    end
+
+    UC1 -->|"shared value object<br/>(ProductId, Quantity)"| UC2
+    UC1 -.-x|"NEVER: import<br/>BC2 entity"| UC2
+
+    subgraph ALLOWED ["Allowed patterns"]
+        V["Shared value objects<br/>(IDs, enums)"]
+        A["API calls<br/>(REST between BCs)"]
+        E["Domain events<br/>(async, eventual consistency)"]
+    end
+
+    style BC1 fill:#E8F5E9,stroke:#4CAF50
+    style BC2 fill:#E3F2FD,stroke:#2196F3
+    style ALLOWED fill:#FFF3E0,stroke:#FF9800
+```
+
+> **When domains grow entangled**, it's time to reorganize. See [Strangler Pattern for BC Reorganization](STRANGLER_PATTERN.md).
+
+---
+
 ## The 3-Agent Rule
 
 > **Hard limit: no more than 3 concurrent AI agent groups per domain.**

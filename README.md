@@ -52,8 +52,9 @@ Out of the box, Claude Code is powerful but generic. It doesn't know your archit
 │   └── meta-rules.md     how to write rules (see also docs/RULES_GUIDE.md)
 ├── skills/          slash commands (/tdd, /commit, /tracing, ...)
 └── docs/
-    ├── RULES_GUIDE.md    how to write rules that don't waste tokens
-    └── REPO_ORGANIZATION.md  monorepo structure, 3-agent rule, scaling
+    ├── RULES_GUIDE.md         how to write rules that don't waste tokens
+    ├── REPO_ORGANIZATION.md   monorepo structure, DDD anatomy, 3-agent rule
+    └── STRANGLER_PATTERN.md   reorganize bounded contexts without breaking the system
 ```
 
 ---
@@ -243,6 +244,8 @@ vim .claude/skills/test-all/SKILL.md
 The number of product features maps directly to the number of bounded contexts in the backend. Each feature is a vertical slice through all DDD layers — not files scattered across shared directories.
 
 **The 3-Agent Rule:** From our experience, no more than 3 concurrent AI agent groups can work on the same domain without conflicts. The bottleneck is shared wiring files (`models.py`, `dependencies.py`, `router.py`, `conftest.py`) — with 4+ agents, merge conflicts outnumber productive changes.
+
+**When boundaries shift**, use the [Strangler Pattern](docs/STRANGLER_PATTERN.md) to reorganize BCs: move domain first (aggregate + repo + exceptions), then follow with application and infrastructure layers, verifying with `make check` between each phase.
 
 ```mermaid
 graph LR
