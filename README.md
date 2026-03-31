@@ -11,7 +11,6 @@ Battle-tested rules, skills, and agents that turn Claude Code into a senior engi
 [![Setup](https://img.shields.io/badge/setup-30_seconds-brightgreen)](#-quick-start)
 [![Rules](https://img.shields.io/badge/rules-15-green)](#-rules)
 [![Skills](https://img.shields.io/badge/skills-11-orange)](#-skills)
-[![Agents](https://img.shields.io/badge/agents-3-red)](#-agents)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 <br>
@@ -52,7 +51,6 @@ Out of the box, Claude Code is powerful but generic. It doesn't know your archit
 │   ├── frontend-*.md     UI design, testing, components
 │   └── meta-rules.md     how to write rules (see also docs/RULES_GUIDE.md)
 ├── skills/          slash commands (/tdd, /commit, /tracing, ...)
-├── agents/          specialized sub-agents (planner, code-review, ui-ux)
 └── docs/
     ├── RULES_GUIDE.md    how to write rules that don't waste tokens
     └── REPO_ORGANIZATION.md  monorepo structure, 3-agent rule, scaling
@@ -67,10 +65,8 @@ graph LR
     A["You: claude"] --> B[".claude/ detected"]
     B --> C["Rules loaded<br/>(scoped by file path)"]
     B --> D["Skills available<br/>(/tdd, /commit, ...)"]
-    B --> E["Agents ready<br/>(auto-spawn on match)"]
     C --> F["Claude writes code<br/>following YOUR conventions"]
     D --> F
-    E --> F
 ```
 
 **Rules** use YAML frontmatter to scope when they activate. Claude only sees what's relevant:
@@ -84,8 +80,6 @@ paths:
 ```
 
 **Skills** are slash commands you invoke directly. Type `/tdd` and watch the full red-green-refactor cycle.
-
-**Agents** are specialized sub-processes that Claude spawns automatically when the task matches their expertise.
 
 ---
 
@@ -157,30 +151,6 @@ Chain any skills into a sequential pipeline. Output of each phase feeds into the
 ```
 
 Generates a ready-to-run monorepo with backend (FastAPI DDD with `leads` bounded context), frontend (React 19 + Vite), root orchestration (Makefile, docker-compose), and tests that pass immediately. See the [architecture diagrams](skills/init-repo/DESIGN.md).
-
----
-
-## Agents
-
-Agents are specialized sub-processes that Claude Code spawns automatically when a task matches their expertise. You don't invoke them -- Claude does.
-
-### Planner
-
-**Activates on:** new features, complex tasks, multi-file changes
-
-Analyzes requirements completeness (goal, acceptance criteria, edge cases, dependencies), maps affected files across DDD layers, assesses risks (architecture, DB, testing, performance, security), and produces a step-by-step implementation plan with verification steps and commit breakdown.
-
-### Code Review Sentinel
-
-**Activates on:** after writing or modifying code
-
-Reviews against project rules with special focus on **test quality**. Flags trivial tests (mock assertions, vacuous truths, decorator testing), checks DDD layer violations, SOLID principles, security vulnerabilities. Renders verdict: APPROVE / REQUEST CHANGES / BLOCK.
-
-### UI/UX Engineer
-
-**Activates on:** frontend components, page redesigns, UX fixes
-
-20+ years of design-to-code experience. Works test-first: writes Vitest + Testing Library tests before implementation. Builds modern 2020s interfaces with accessibility (ARIA, keyboard navigation), micro-interactions, responsive design, and CSS Modules. Enforces visual cohesion rule.
 
 ---
 
