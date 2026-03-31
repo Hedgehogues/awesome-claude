@@ -10,7 +10,7 @@ Battle-tested rules, skills, and agents that turn Claude Code into a senior engi
 [![Claude Code](https://img.shields.io/badge/Claude_Code-compatible-blueviolet)](https://claude.ai/code)
 [![Setup](https://img.shields.io/badge/setup-30_seconds-brightgreen)](#-quick-start)
 [![Rules](https://img.shields.io/badge/rules-15-green)](#-rules)
-[![Skills](https://img.shields.io/badge/skills-10-orange)](#-skills)
+[![Skills](https://img.shields.io/badge/skills-11-orange)](#-skills)
 [![Agents](https://img.shields.io/badge/agents-3-red)](#-agents)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
@@ -127,6 +127,7 @@ Type a slash command in Claude Code to activate a skill. Each skill runs a full 
 | **`/pipe`** | Meta-orchestrator: chains skills sequentially (`/pipe triz,tdd Fix the button`). Each phase runs in a dedicated Agent. | Opus |
 | **`/test-all`** | Runs every test suite across all packages (unit, integration, e2e). Reports statistics with delta vs previous run. | Opus |
 | **`/session-report`** | Generates product-focused summary of uncommitted changes, grouped by user-facing features. | default |
+| **`/init-repo`** | Scaffolds a full DDD monorepo: FastAPI backend (entity, repo, use case, routes) + React 19 frontend + architecture tests. `make check` passes out of the box. [Design doc](skills/init-repo/DESIGN.md). | Sonnet |
 | **`/deploy`** | Docker rebuild + container restart + Alembic migrations. Adapt to your stack. | default |
 | **`/describe`** | Quick project overview without running any commands. Pure text output. | default |
 
@@ -147,6 +148,14 @@ Chain any skills into a sequential pipeline. Output of each phase feeds into the
        │       └── Phase 2: TDD writes tests + fix for the root cause
        └──────── Phase 1: Tracing finds where the request breaks
 ```
+
+### Bootstrapping a Project
+
+```bash
+/init-repo acme-crm leads
+```
+
+Generates a ready-to-run monorepo with backend (FastAPI DDD with `leads` bounded context), frontend (React 19 + Vite), root orchestration (Makefile, docker-compose), and tests that pass immediately. See the [architecture diagrams](skills/init-repo/DESIGN.md).
 
 ---
 
