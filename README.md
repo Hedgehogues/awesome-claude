@@ -54,7 +54,8 @@ Out of the box, Claude Code is powerful but generic. It doesn't know your archit
 ├── skills/          slash commands (/tdd, /commit, /tracing, ...)
 ├── agents/          specialized sub-agents (planner, code-review, ui-ux)
 └── docs/
-    └── RULES_GUIDE.md    how to write rules that don't waste tokens
+    ├── RULES_GUIDE.md    how to write rules that don't waste tokens
+    └── REPO_ORGANIZATION.md  monorepo structure, 3-agent rule, scaling
 ```
 
 ---
@@ -261,6 +262,37 @@ vim .claude/skills/deploy/SKILL.md
 
 # Edit test runner for your test setup
 vim .claude/skills/test-all/SKILL.md
+```
+
+---
+
+## Repo Organization
+
+> **Full guide with diagrams: [docs/REPO_ORGANIZATION.md](docs/REPO_ORGANIZATION.md)**
+
+The number of product features maps directly to the number of bounded contexts in the backend. Each feature is a vertical slice through all DDD layers — not files scattered across shared directories.
+
+**The 3-Agent Rule:** From our experience, no more than 3 concurrent AI agent groups can work on the same domain without conflicts. The bottleneck is shared wiring files (`models.py`, `dependencies.py`, `router.py`, `conftest.py`) — with 4+ agents, merge conflicts outnumber productive changes.
+
+```mermaid
+graph LR
+    subgraph safe ["<= 3 agents · works"]
+        A1["Agent 1"] --> D1[("Domain")]
+        A2["Agent 2"] --> D1
+        A3["Agent 3"] --> D1
+    end
+
+    subgraph danger ["> 3 agents · conflicts"]
+        B1["Agent 1"] --> D2[("Domain")]
+        B2["Agent 2"] --> D2
+        B3["Agent 3"] --> D2
+        B4["Agent 4"] --> D2
+    end
+
+    style safe fill:#E8F5E9,stroke:#4CAF50,stroke-width:2px
+    style danger fill:#FFEBEE,stroke:#F44336,stroke-width:2px
+    style D1 fill:#4CAF50,color:#fff
+    style D2 fill:#F44336,color:#fff
 ```
 
 ---
