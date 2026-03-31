@@ -10,7 +10,7 @@ Battle-tested rules, skills, and agents that turn Claude Code into a senior engi
 [![Claude Code](https://img.shields.io/badge/Claude_Code-compatible-blueviolet)](https://claude.ai/code)
 [![Setup](https://img.shields.io/badge/setup-30_seconds-brightgreen)](#-quick-start)
 [![Rules](https://img.shields.io/badge/rules-15-green)](#-rules)
-[![Skills](https://img.shields.io/badge/skills-11-orange)](#-skills)
+[![Skills](https://img.shields.io/badge/skills-16-orange)](#-skills)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 <br>
@@ -52,6 +52,7 @@ Out of the box, Claude Code is powerful but generic. It doesn't know your archit
 │   └── meta-rules.md     how to write rules (see also docs/RULES_GUIDE.md)
 ├── skills/          slash commands (/tdd, /commit, /tracing, ...)
 └── docs/
+    ├── SKILL_DESIGN.md        how to write skills: inline vs fork, model selection, hooks
     ├── RULES_GUIDE.md         how to write rules that don't waste tokens
     ├── REPO_ORGANIZATION.md   monorepo structure, DDD anatomy, 3-agent rule
     └── STRANGLER_PATTERN.md   reorganize bounded contexts without breaking the system
@@ -111,21 +112,61 @@ That's it. No config files. No setup scripts. No dependencies.
 
 Type a slash command in Claude Code to activate a skill. Each skill runs a full workflow -- not just a prompt, but a multi-step process with verification.
 
-> **Writing your own?** See [Skill Design Principles](skills/SKILL_DESIGN.md) -- model selection, prompt compression, `!`command`` precomputation, hooks, and a checklist for shipping.
+> **Writing your own?** See [Skill Design Principles](docs/SKILL_DESIGN.md) -- inline vs fork execution, model selection, prompt compression, `!`command`` precomputation, hooks, and a checklist for shipping.
+
+Skills run in two modes. **Inline** (default) injects the prompt into the current conversation -- the skill sees your full history and shares tool state. **Fork** (`context: fork`) runs in an isolated subprocess -- useful when a skill produces massive output or needs a clean context. All 16 skills in this repo are inline.
+
+```mermaid
+graph LR
+    subgraph INLINE ["Inline (default)"]
+        I1["Sees conversation history"]
+        I2["Shares tool state"]
+        I3["Zero overhead"]
+    end
+
+    subgraph FORK ["Fork (context: fork)"]
+        F1["Isolated subprocess"]
+        F2["Own context window"]
+        F3["Returns single message"]
+    end
+
+    INLINE ---|"Use for"| I_USE["Most skills:<br/>commit, tdd, tracing, ..."]
+    FORK ---|"Use for"| F_USE["Massive output,<br/>parallel execution,<br/>context isolation"]
+
+    style INLINE fill:#E8F5E9,stroke:#4CAF50,stroke-width:2px
+    style FORK fill:#FFF3E0,stroke:#FF9800,stroke-width:2px
+```
+
+#### Engineering & Architecture
 
 | Command | What It Does | Model |
 |---------|-------------|-------|
 | **`/tdd`** | Full TDD cycle: PlantUML diagrams, test plan, red tests, green implementation, refactor. Covers unit/state/security/integration/e2e. | Opus |
-| **`/commit`** | Analyzes all changes, drafts structured commit (What/Why/Details), shows plan, waits for your approval. Never auto-pushes. | default |
 | **`/triz`** | TRIZ problem-solving: ARIZ-85V algorithm -- contradiction analysis, IFR, 40 inventive principles, vepole analysis, structured resolution. | Opus |
 | **`/tracing`** | Traces bugs across all layers (frontend -> API -> backend -> DB). Generates PlantUML sequence + C4 component diagrams showing the failure path. | Opus |
 | **`/ui`** | Senior UI/UX engineer: TDD-first React components with accessibility, responsive design, visual cohesion. | Opus |
-| **`/pipe`** | Meta-orchestrator: chains skills sequentially (`/pipe triz,tdd Fix the button`). Each phase runs in a dedicated Agent. | Opus |
-| **`/test-all`** | Runs every test suite across all packages (unit, integration, e2e). Reports statistics with delta vs previous run. | Opus |
-| **`/session-report`** | Generates product-focused summary of uncommitted changes, grouped by user-facing features. | default |
+| **`/arch-gap`** | TOGAF-style gap analysis: baseline vs target architecture, transition plan via TDD, gap matrix with risks. | Opus |
 | **`/init-repo`** | Scaffolds a full DDD monorepo: FastAPI backend (entity, repo, use case, routes) + React 19 frontend + architecture tests. `make check` passes out of the box. [Design doc](skills/init-repo/DESIGN.md). | Sonnet |
-| **`/deploy`** | Docker rebuild + container restart + Alembic migrations. Adapt to your stack. | default |
-| **`/describe`** | Quick project overview without running any commands. Pure text output. | default |
+
+#### Fix & Refactor
+
+| Command | What It Does | Model |
+|---------|-------------|-------|
+| **`/fix-bug`** | Combines `/tracing` (root cause analysis) + `/tdd` (test-first fix). Two-phase bug repair. | Opus |
+| **`/fix-tests`** | Fixes failing tests by modifying **logic, not tests**. Tests are the spec -- implementation must conform. | Sonnet |
+| **`/remove-feature`** | Surgical feature removal: traces dependency graph, classifies files (DELETE/EDIT/ADAPT), removes along critical path only. | Opus |
+| **`/dead-features`** | Finds implemented but user-unreachable functionality. Checks connectivity across layers (endpoints <-> UI, exports <-> imports). | Sonnet |
+
+#### Workflow & Ops
+
+| Command | What It Does | Model |
+|---------|-------------|-------|
+| **`/commit`** | Analyzes all changes, drafts structured commit (What/Why/Details), shows plan, waits for your approval. Never auto-pushes. | Haiku |
+| **`/deploy`** | Docker rebuild + container restart + Alembic migrations. Adapt to your stack. | Haiku |
+| **`/test-all`** | Runs every test suite across all packages (unit, integration, e2e). Reports statistics with delta vs previous run. | Haiku |
+| **`/describe`** | One-paragraph product description of what was done or what's planned. Stakeholder-friendly, no tech details. | Haiku |
+| **`/session-report`** | Generates product-focused summary from current conversation context. No git commands -- pure introspection. | Haiku |
+| **`/pipe`** | Meta-orchestrator: chains skills sequentially (`/pipe triz,tdd Fix the button`). Each phase runs in a dedicated Agent. | Opus |
 
 ### How `/pipe` Works
 
