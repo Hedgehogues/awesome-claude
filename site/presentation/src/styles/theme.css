@@ -690,7 +690,7 @@ a:hover {
 /* ===== Patterns button in footer ===== */
 
 .patterns-btn {
-  position: fixed;
+  position: absolute;
   top: 1rem;
   right: 1rem;
   z-index: 50;
@@ -806,13 +806,13 @@ a:hover {
 /* ===== Links button ===== */
 
 .links-btn {
-  position: fixed;
+  position: absolute;
   top: 1rem;
   right: 3.5rem;
-  z-index: 50;
+  z-index: 100;
   background: none;
   border: none;
-  color: var(--fg-muted);
+  color: #c0c0c0;
   font-size: 1rem;
   width: 2rem;
   height: 2rem;
@@ -827,13 +827,13 @@ a:hover {
 .links-btn:hover { color: var(--accent); }
 
 .github-btn {
-  position: fixed;
+  position: absolute;
   top: 1rem;
   right: 6rem;
-  z-index: 50;
+  z-index: 100;
   background: none;
   border: none;
-  color: var(--fg-muted);
+  color: #c0c0c0;
   font-size: 1rem;
   width: 2rem;
   height: 2rem;
