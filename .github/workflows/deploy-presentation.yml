@@ -70,6 +70,13 @@ jobs:
             DOMAIN="${{ secrets.DEPLOY_DOMAIN }}"
             CERT_PATH="/etc/letsencrypt/live/$DOMAIN/fullchain.pem"
             SERVER_DIR=~/awesome-claude/site/server
+            if [ ! -f /etc/nginx/ssl/selfsigned.crt ]; then
+              sudo mkdir -p /etc/nginx/ssl
+              sudo openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
+                -keyout /etc/nginx/ssl/selfsigned.key \
+                -out /etc/nginx/ssl/selfsigned.crt \
+                -subj "/CN=$DOMAIN" 2>/dev/null
+            fi
             if [ -f "$CERT_PATH" ]; then
               DOMAIN="$DOMAIN" envsubst '${DOMAIN}' \
                 < "$SERVER_DIR/nginx/https.conf.template" \

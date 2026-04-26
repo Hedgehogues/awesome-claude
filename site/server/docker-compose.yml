@@ -9,6 +9,7 @@ services:
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
       - /var/www/certbot:/var/www/certbot:ro
+      - /etc/nginx/ssl:/etc/nginx/ssl:ro
     depends_on:
       - presentation
 
