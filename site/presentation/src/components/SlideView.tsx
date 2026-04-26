@@ -16,6 +16,11 @@ export default function SlideView() {
     sessionStorage.setItem('lastSlide', String(currentIndex))
     navigate('/patterns')
   }
+
+  const openLinks = () => {
+    sessionStorage.setItem('lastSlide', String(currentIndex))
+    navigate('/links')
+  }
   const rawIndex = Number.parseInt(params.index ?? '1', 10) || 1
   const currentIndex = Math.max(1, Math.min(total, rawIndex))
 
@@ -68,6 +73,13 @@ export default function SlideView() {
       <SlideErrorBoundary slideIndex={currentIndex}>
         <Component />
       </SlideErrorBoundary>
+      <button
+        className="links-btn"
+        onClick={openLinks}
+        title="Ссылки"
+      >
+        ☰
+      </button>
       <button
         className="patterns-btn"
         onClick={openPatterns}
