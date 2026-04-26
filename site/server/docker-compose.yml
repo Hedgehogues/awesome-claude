@@ -5,8 +5,14 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    entrypoint: ["/bin/sh", "/scripts/nginx-entrypoint.sh"]
+    environment:
+      - DOMAIN=${DOMAIN}
     volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./scripts/nginx-entrypoint.sh:/scripts/nginx-entrypoint.sh:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/https.conf.template:/etc/nginx/templates/https.conf.template:ro
+      - ./nginx/http-only.conf:/etc/nginx/templates/http-only.conf:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
       - /var/www/certbot:/var/www/certbot:ro
       - /etc/nginx/ssl:/etc/nginx/ssl:ro
@@ -16,10 +22,14 @@ services:
   certbot:
     image: certbot/certbot:v3.0.1
     restart: unless-stopped
+    entrypoint: ["/bin/sh", "/scripts/certbot-entrypoint.sh"]
+    environment:
+      - DOMAIN=${DOMAIN}
+      - CERTBOT_EMAIL=${CERTBOT_EMAIL}
     volumes:
+      - ./scripts/certbot-entrypoint.sh:/scripts/certbot-entrypoint.sh:ro
       - /etc/letsencrypt:/etc/letsencrypt
       - /var/www/certbot:/var/www/certbot
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --quiet; sleep 12h & wait $${!}; done'"
 
   presentation:
     image: ghcr.io/hedgehogues/awesome-claude-presentation:latest
