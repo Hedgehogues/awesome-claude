@@ -62,6 +62,10 @@ jobs:
               git -C ~/awesome-claude checkout ${{ github.ref_name }}
               git -C ~/awesome-claude pull
             fi
+            cat > ~/awesome-claude/site/server/.env <<EOF
+            DOMAIN=${{ secrets.DEPLOY_DOMAIN }}
+            CERTBOT_EMAIL=${{ secrets.CERTBOT_EMAIL }}
+            EOF
             cd ~/awesome-claude/site/presentation
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             docker compose pull
