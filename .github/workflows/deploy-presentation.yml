@@ -56,8 +56,10 @@ jobs:
             fi
             if [ ! -d ~/awesome-claude/.git ]; then
               rm -rf ~/awesome-claude
-              git clone https://github.com/${{ github.repository }}.git ~/awesome-claude
+              git clone -b ${{ github.ref_name }} https://github.com/${{ github.repository }}.git ~/awesome-claude
             else
+              git -C ~/awesome-claude fetch origin
+              git -C ~/awesome-claude checkout ${{ github.ref_name }}
               git -C ~/awesome-claude pull
             fi
             cd ~/awesome-claude/site/presentation
