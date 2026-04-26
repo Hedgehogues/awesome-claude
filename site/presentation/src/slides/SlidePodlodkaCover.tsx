@@ -20,7 +20,7 @@ export default function SlidePodlodkaCover() {
       <img
         src="/podlodka-cover.png"
         alt="Podlodka PHP Crew — обложка доклада"
-        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+        style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
       />
     </div>
   )
