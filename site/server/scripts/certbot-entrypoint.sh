@@ -17,11 +17,15 @@ for i in range(30):
 sys.exit(1)
 "
     echo "Requesting certificate for ${DOMAIN}..."
-    certbot certonly \
+    if ! certbot certonly \
         --webroot -w /var/www/certbot \
         -d "${DOMAIN}" -d "www.${DOMAIN}" \
         --email "${CERTBOT_EMAIL}" \
-        --agree-tos --no-eff-email --non-interactive
+        --agree-tos --no-eff-email --non-interactive; then
+        echo "Certificate request failed, retrying in 1 hour"
+        sleep 3600
+        exit 1
+    fi
     echo "Certificate obtained!"
 fi
 
