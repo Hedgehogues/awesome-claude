@@ -2,7 +2,7 @@ name: Deploy Presentation
 
 on:
   push:
-    branches: [main]
+    branches: [main, podloka_crew_01]
     paths:
       - "site/presentation/**"
       - ".github/workflows/deploy-presentation.yml"
