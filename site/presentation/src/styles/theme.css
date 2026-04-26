@@ -826,6 +826,28 @@ a:hover {
 
 .links-btn:hover { color: var(--accent); }
 
+.github-btn {
+  position: fixed;
+  top: 1rem;
+  right: 6rem;
+  z-index: 50;
+  background: none;
+  border: none;
+  color: var(--fg-muted);
+  font-size: 1rem;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: color 0.15s;
+  text-decoration: none;
+}
+
+.github-btn:hover { color: var(--accent); }
+
 /* ===== Pattern Card — clickable ===== */
 
 .pattern-card {

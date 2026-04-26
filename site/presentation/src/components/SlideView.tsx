@@ -73,6 +73,15 @@ export default function SlideView() {
       <SlideErrorBoundary slideIndex={currentIndex}>
         <Component />
       </SlideErrorBoundary>
+      <a
+        className="github-btn"
+        href="https://github.com/Hedgehogues/awesome-claude"
+        target="_blank"
+        rel="noopener noreferrer"
+        title="Исходники"
+      >
+        ⌥
+      </a>
       <button
         className="links-btn"
         onClick={openLinks}
