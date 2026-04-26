@@ -90,16 +90,4 @@ jobs:
             docker ps -aq --filter "name=server-certbot-run" | xargs -r docker rm -f
             docker compose stop
             docker compose up -d --remove-orphans
-            if [ ! -f "$CERT_PATH" ]; then
-              sleep 5
-              docker compose run --rm certbot certonly \
-                --webroot -w /var/www/certbot \
-                -d "$DOMAIN" -d "www.$DOMAIN" \
-                --email "${{ secrets.CERTBOT_EMAIL }}" \
-                --agree-tos --no-eff-email
-              DOMAIN="$DOMAIN" envsubst '${DOMAIN}' \
-                < "$SERVER_DIR/nginx/https.conf.template" \
-                > "$SERVER_DIR/nginx/conf.d/default.conf"
-              docker compose restart nginx
-            fi
-            docker image prune -f
+            docker image prune -f || true
