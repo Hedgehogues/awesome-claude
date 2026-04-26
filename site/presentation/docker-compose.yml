@@ -1,0 +1,6 @@
+services:
+  presentation:
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/awesome-claude-presentation:latest
+    restart: unless-stopped
+    ports:
+      - "3000:80"
