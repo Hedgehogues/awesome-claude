@@ -3,4 +3,4 @@ services:
     image: ghcr.io/hedgehogues/awesome-claude-presentation:latest
     restart: unless-stopped
     ports:
-      - "3000:80"
+      - "80:80"
