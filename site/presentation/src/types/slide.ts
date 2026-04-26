@@ -1,6 +1,6 @@
 import type { ComponentType } from 'react'
 
-export type SectionNumber = 1 | 2 | 3
+export type SectionNumber = 0 | 1 | 2 | 3
 
 export interface SlideMeta {
   id: string
@@ -16,6 +16,7 @@ export interface SlideEntry {
 }
 
 export const SECTION_TITLES: Record<SectionNumber, string> = {
+  0: '',
   1: 'Индустрия',
   2: 'Проблема → теория → решение',
   3: 'Воркшоп OpenSpec',
