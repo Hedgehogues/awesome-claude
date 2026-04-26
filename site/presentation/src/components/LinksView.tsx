@@ -57,6 +57,19 @@ const sections: LinkSection[] = [
     ],
   },
   {
+    title: 'Проекты и достижения',
+    items: [
+      { url: 'https://arxiv.org/abs/2502.13266v1', label: 'ArXiv · ML-подход для кубика Рубика', comment: 'Превзошли SOTA для 3×3×3, впервые решили 4×4×4 и 5×5×5' },
+      { url: 'https://t.me/parsing_conf/', label: 'Conference on Internet Data Mining', comment: 'Организатор · комьюнити 1000 человек' },
+      { url: 'https://www.linkedin.com/in/eurvanov/details/honors/', label: 'Best Onboarding Manager · Sbermarket', comment: '2021–2022' },
+      { url: 'https://www.linkedin.com/in/eurvanov/details/honors/', label: 'Winner · Self-driving cars competition', comment: '2021 · Fless' },
+      { url: 'https://www.linkedin.com/in/eurvanov/details/honors/', label: 'Data Mining section · ODS.ai', comment: 'Организатор · 30 000 человек' },
+      { url: 'https://www.linkedin.com/in/eurvanov/details/honors/', label: 'Winner · Rosbank credit card forecast', comment: '2018 · МГУ' },
+      { url: 'https://www.linkedin.com/in/eurvanov/details/honors/', label: 'Winner · Uralsib bank churn prediction', comment: '2017 · Sputnik.ru' },
+      { url: 'https://www.linkedin.com/in/eurvanov/details/projects/', label: 'Fabrika.cloud · CAD model evaluation system', comment: '2020 – настоящее время' },
+    ],
+  },
+  {
     title: 'Медиа',
     items: [
       { url: 'https://www.linkedin.com/feed/update/urn:li:activity:7198977579297456128/', label: 'LinkedIn · Публикация' },
