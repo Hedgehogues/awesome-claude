@@ -56,26 +56,6 @@ resource "google_compute_firewall" "allow_icmp" {
   source_ranges = ["0.0.0.0/0"]
 }
 
-resource "google_compute_firewall" "allow_rdp" {
-  name    = "default-allow-rdp"
-  network = "default"
-  allow {
-    protocol = "tcp"
-    ports    = ["3389"]
-  }
-  source_ranges = ["0.0.0.0/0"]
-}
-
-resource "google_compute_firewall" "allow_presentation_old" {
-  name    = "allow-presentation"
-  network = "default"
-  allow {
-    protocol = "tcp"
-    ports    = ["3000"]
-  }
-  source_ranges = ["0.0.0.0/0"]
-}
-
 resource "google_compute_firewall" "allow_internal" {
   name    = "default-allow-internal"
   network = "default"
