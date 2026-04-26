@@ -6,11 +6,9 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/templates:/etc/nginx/templates:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
       - /var/www/certbot:/var/www/certbot:ro
-    environment:
-      - DOMAIN
     depends_on:
       - presentation
 

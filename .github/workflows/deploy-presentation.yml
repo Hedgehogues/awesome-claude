@@ -5,6 +5,7 @@ on:
     branches: [main, podloka_crew_01]
     paths:
       - "site/presentation/**"
+      - "site/server/**"
       - ".github/workflows/deploy-presentation.yml"
   workflow_dispatch:
 
@@ -62,12 +63,22 @@ jobs:
               git -C ~/awesome-claude checkout ${{ github.ref_name }}
               git -C ~/awesome-claude pull
             fi
-            cat > ~/awesome-claude/site/server/.env <<EOF
+            cat > ~/awesome-claude/site/server/.env << 'ENVEOF'
             DOMAIN=${{ secrets.DEPLOY_DOMAIN }}
             CERTBOT_EMAIL=${{ secrets.CERTBOT_EMAIL }}
-            EOF
-            cd ~/awesome-claude/site/presentation
+            ENVEOF
+            DOMAIN="${{ secrets.DEPLOY_DOMAIN }}"
+            CERT_PATH="/etc/letsencrypt/live/$DOMAIN/fullchain.pem"
+            SERVER_DIR=~/awesome-claude/site/server
+            if [ -f "$CERT_PATH" ]; then
+              DOMAIN="$DOMAIN" envsubst '${DOMAIN}' \
+                < "$SERVER_DIR/nginx/https.conf.template" \
+                > "$SERVER_DIR/nginx/conf.d/default.conf"
+            else
+              cp "$SERVER_DIR/nginx/http-only.conf" "$SERVER_DIR/nginx/conf.d/default.conf"
+            fi
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            cd $SERVER_DIR
             docker compose pull
             docker compose up -d --remove-orphans
             docker image prune -f
