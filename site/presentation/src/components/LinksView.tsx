@@ -28,6 +28,15 @@ const sections: LinkSection[] = [
     ],
   },
   {
+    title: 'Образование',
+    items: [
+      { url: 'https://www.linkedin.com/in/eurvanov/', label: 'МГУ · Machine Learning', comment: '2018–2019 · ВМК · PZAD, Дьяконов' },
+      { url: 'https://www.linkedin.com/in/eurvanov/', label: 'МАИ · Математика и информатика', comment: 'Магистр · 2012–2018' },
+      { url: 'https://www.linkedin.com/in/eurvanov/details/recommendations/?detailScreenTabIndex=0', label: 'LinkedIn · Рекомендации' },
+      { url: 'https://www.linkedin.com/in/eurvanov/', label: 'Волонтёр · Кашировская коррекционная школа', comment: '2014–2016 · преподавал программирование и математику детям с трудными судьбами' },
+    ],
+  },
+  {
     title: 'IT-комьюнити',
     items: [
       { url: 'https://t.me/batumi_it_digital', label: 'Батуми' },
