@@ -46,7 +46,7 @@ export default function SlideView() {
   }, [currentIndex, sendToChannel])
 
   const openPresenter = () => {
-    window.open('/presenter', 'podlodka-presenter', 'width=1200,height=800')
+    window.open('/presenter', 'podlodka-presenter', 'width=1200,height=800,noopener,noreferrer')
   }
 
   useKeyboardNavigation({
