@@ -17,6 +17,7 @@ variable "project_id" {
   sensitive   = true
 }
 
+
 variable "deploy_ssh_public_key" {
   description = "SSH public key for deploy user"
   sensitive   = true
