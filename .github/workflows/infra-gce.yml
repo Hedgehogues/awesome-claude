@@ -73,19 +73,21 @@ jobs:
           DOMAIN="${{ secrets.DEPLOY_DOMAIN }}" \
           NS0="$NS0" NS1="$NS1" NS2="$NS2" NS3="$NS3" \
           python3 - <<'PYEOF'
-          import urllib.request, urllib.parse, os, json
-          data = urllib.parse.urlencode({
-            'username':          os.environ['REGRU_USERNAME'],
-            'password':          os.environ['REGRU_PASSWORD'],
-            'domains[0][dname]': os.environ['DOMAIN'],
-            'nss[0][ns]':        os.environ['NS0'],
-            'nss[1][ns]':        os.environ['NS1'],
-            'nss[2][ns]':        os.environ['NS2'],
-            'nss[3][ns]':        os.environ['NS3'],
-            'output_format':     'json',
+          import urllib.request, json, os
+          payload = json.dumps({
+            'username': os.environ['REGRU_USERNAME'],
+            'password': os.environ['REGRU_PASSWORD'],
+            'domains':  [{'dname': os.environ['DOMAIN']}],
+            'nss':      {'ns0': os.environ['NS0'], 'ns1': os.environ['NS1'],
+                         'ns2': os.environ['NS2'], 'ns3': os.environ['NS3']},
+            'output_format': 'json',
           }).encode()
-          req = urllib.request.urlopen('https://api.reg.ru/api/regru2/domain/update_nss', data)
-          result = json.loads(req.read().decode())
+          req = urllib.request.Request(
+            'https://api.reg.ru/api/regru2/domain/update_nss',
+            data=payload,
+            headers={'Content-Type': 'application/json'},
+          )
+          result = json.loads(urllib.request.urlopen(req).read().decode())
           print(json.dumps(result, indent=2))
           if result.get('result') != 'success':
             raise SystemExit(f"reg.ru API error: {result}")
