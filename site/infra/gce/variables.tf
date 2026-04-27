@@ -3,6 +3,11 @@ variable "project_id" {
   description = "GCP project ID"
 }
 
+variable "sa_email" {
+  type        = string
+  description = "Terraform service account email"
+}
+
 variable "domain" {
   type        = string
   description = "Primary domain name"

@@ -1,6 +1,7 @@
 resource "google_project_service" "dns" {
   service            = "dns.googleapis.com"
   disable_on_destroy = false
+  depends_on         = [google_project_iam_member.sa_serviceusage_admin]
 }
 
 resource "google_dns_managed_zone" "web" {
