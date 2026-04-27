@@ -26,6 +26,37 @@ resource "google_dns_record_set" "www" {
   rrdatas      = [google_compute_address.web.address]
 }
 
+resource "google_dns_record_set" "mx" {
+  name         = "${var.domain}."
+  managed_zone = google_dns_managed_zone.web.name
+  type         = "MX"
+  ttl          = 300
+  rrdatas = [
+    "1 aspmx.l.google.com.",
+    "1 smtp.google.com.",
+    "5 alt1.aspmx.l.google.com.",
+    "5 alt2.aspmx.l.google.com.",
+    "10 alt3.aspmx.l.google.com.",
+    "10 alt4.aspmx.l.google.com.",
+  ]
+}
+
+resource "google_dns_record_set" "google_site_verification_cname" {
+  name         = "2p3q4i2lip73.${var.domain}."
+  managed_zone = google_dns_managed_zone.web.name
+  type         = "CNAME"
+  ttl          = 300
+  rrdatas      = ["gv-yeif5w3mehr3nl.dv.googlehosted.com."]
+}
+
+resource "google_dns_record_set" "google_site_verification_txt" {
+  name         = "${var.domain}."
+  managed_zone = google_dns_managed_zone.web.name
+  type         = "TXT"
+  ttl          = 300
+  rrdatas      = ["\"google-site-verification=I2nwXblQdtGvoxjx-_SwPs0AawwAfN03daD9jToQ2tA\""]
+}
+
 resource "google_compute_address" "web" {
   name   = "awesome-claude-ip"
   region = var.region
