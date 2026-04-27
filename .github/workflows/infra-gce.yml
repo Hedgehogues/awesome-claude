@@ -17,7 +17,7 @@ jobs:
   terraform:
     runs-on: ubuntu-latest
     env:
-      REGRU_API_URL: ${{ vars.REGRU_API_URL }}
+      REGRU_API_URL: ${{ secrets.REGRU_API_URL }}
     permissions:
       id-token: write
       contents: read
