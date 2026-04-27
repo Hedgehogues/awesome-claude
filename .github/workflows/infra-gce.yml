@@ -16,8 +16,6 @@ on:
 jobs:
   terraform:
     runs-on: ubuntu-latest
-    env:
-      REGRU_API_URL: ${{ secrets.REGRU_API_URL }}
     permissions:
       id-token: write
       contents: read
@@ -66,59 +64,3 @@ jobs:
           TF_VAR_domain: ${{ secrets.DEPLOY_DOMAIN }}
           TF_VAR_deploy_user: ${{ secrets.DEPLOY_USER }}
           TF_VAR_deploy_ssh_public_key: ${{ secrets.DEPLOY_SSH_PUBLIC_KEY }}
-
-      - name: Update NS records at reg.ru
-        if: steps.apply.outcome == 'success'
-        env:
-          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-          REGRU_USERNAME: ${{ secrets.REGRU_USERNAME }}
-          REGRU_PASSWORD: ${{ secrets.REGRU_PASSWORD }}
-        run: |
-          VM_IP=$(terraform output -raw ip)
-          NS0=$(terraform output -json nameservers | jq -r '.[0]')
-          NS1=$(terraform output -json nameservers | jq -r '.[1]')
-          NS2=$(terraform output -json nameservers | jq -r '.[2]')
-          NS3=$(terraform output -json nameservers | jq -r '.[3]')
-
-          install -m 600 /dev/null /tmp/deploy_key
-          printf '%s' "$DEPLOY_SSH_KEY" > /tmp/deploy_key
-
-          cat > /tmp/regru_ns.py << 'PYEOF'
-          import sys, urllib.request, urllib.parse, json
-          url, user, pw, domain, ns0, ns1, ns2, ns3 = sys.argv[1:]
-          data = urllib.parse.urlencode({
-            'username': user, 'password': pw,
-            'domains[0][dname]': domain,
-            'nss[ns0]': ns0, 'nss[ns1]': ns1,
-            'nss[ns2]': ns2, 'nss[ns3]': ns3,
-            'output_format': 'json',
-          }).encode()
-          r = json.loads(urllib.request.urlopen(urllib.request.Request(
-            url, data=data,
-            headers={'Content-Type': 'application/x-www-form-urlencoded'},
-          )).read())
-          print(json.dumps(r, indent=2))
-          if r.get('result') != 'success':
-            raise SystemExit(f"reg.ru API error: {r}")
-          PYEOF
-
-          # Wait for VM SSH to become available (fresh VM may need a moment)
-          for i in $(seq 1 12); do
-            ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 \
-                -i /tmp/deploy_key \
-                "${{ secrets.DEPLOY_USER }}@$VM_IP" true 2>/dev/null && break
-            echo "Waiting for SSH ($i/12)..."
-            sleep 10
-          done
-
-          scp -o StrictHostKeyChecking=no -i /tmp/deploy_key \
-            /tmp/regru_ns.py "${{ secrets.DEPLOY_USER }}@$VM_IP:/tmp/regru_ns.py"
-
-          # Call reg.ru from the VM — its static IP is whitelisted at reg.ru
-          ssh -o StrictHostKeyChecking=no -i /tmp/deploy_key \
-            "${{ secrets.DEPLOY_USER }}@$VM_IP" \
-            python3 /tmp/regru_ns.py \
-            "${{ env.REGRU_API_URL }}" "$REGRU_USERNAME" "$REGRU_PASSWORD" \
-            "${{ secrets.DEPLOY_DOMAIN }}" "$NS0" "$NS1" "$NS2" "$NS3"
-
-          rm -f /tmp/deploy_key /tmp/regru_ns.py
