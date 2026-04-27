@@ -1,3 +1,13 @@
+import {
+  to = google_dns_managed_zone.web
+  id = "urvanov-com"
+}
+
+import {
+  to = google_compute_address.web
+  id = "projects/${var.project_id}/regions/${var.region}/addresses/awesome-claude-ip"
+}
+
 resource "google_project_service" "dns" {
   service            = "dns.googleapis.com"
   disable_on_destroy = false
