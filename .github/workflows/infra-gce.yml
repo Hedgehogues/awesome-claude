@@ -80,19 +80,21 @@ jobs:
           REGRU_API_URL="$REGRU_API_URL" \
           NS0="$NS0" NS1="$NS1" NS2="$NS2" NS3="$NS3" \
           python3 - <<'PYEOF'
-          import urllib.request, json, os
-          payload = json.dumps({
-            'username': os.environ['REGRU_USERNAME'],
-            'password': os.environ['REGRU_PASSWORD'],
-            'domains':  [{'dname': os.environ['DOMAIN']}],
-            'nss':      {'ns0': os.environ['NS0'], 'ns1': os.environ['NS1'],
-                         'ns2': os.environ['NS2'], 'ns3': os.environ['NS3']},
-            'output_format': 'json',
+          import urllib.request, urllib.parse, json, os
+          data = urllib.parse.urlencode({
+            'username':          os.environ['REGRU_USERNAME'],
+            'password':          os.environ['REGRU_PASSWORD'],
+            'domains[0][dname]': os.environ['DOMAIN'],
+            'nss[ns0]':          os.environ['NS0'],
+            'nss[ns1]':          os.environ['NS1'],
+            'nss[ns2]':          os.environ['NS2'],
+            'nss[ns3]':          os.environ['NS3'],
+            'output_format':     'json',
           }).encode()
           req = urllib.request.Request(
             os.environ['REGRU_API_URL'],
-            data=payload,
-            headers={'Content-Type': 'application/json'},
+            data=data,
+            headers={'Content-Type': 'application/x-www-form-urlencoded'},
           )
           result = json.loads(urllib.request.urlopen(req).read().decode())
           print(json.dumps(result, indent=2))
