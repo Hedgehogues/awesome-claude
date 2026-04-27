@@ -7,7 +7,7 @@ HTTPS_TMPL="/etc/nginx/templates/https.conf.template"
 HTTP_TMPL="/etc/nginx/templates/http-only.conf"
 
 if [ -f "$CERT" ]; then
-    DOMAIN="$DOMAIN" envsubst '${DOMAIN}' < "$HTTPS_TMPL" > "$CONF"
+    DOMAIN="$DOMAIN" SERVER_IP="$SERVER_IP" envsubst '${DOMAIN} ${SERVER_IP}' < "$HTTPS_TMPL" > "$CONF"
 else
     cp "$HTTP_TMPL" "$CONF"
 fi
@@ -18,7 +18,7 @@ NGINX_PID=$!
 while kill -0 $NGINX_PID 2>/dev/null; do
     sleep 60
     if [ -f "$CERT" ] && ! grep -q "ssl_certificate" "$CONF" 2>/dev/null; then
-        DOMAIN="$DOMAIN" envsubst '${DOMAIN}' < "$HTTPS_TMPL" > "$CONF"
+        DOMAIN="$DOMAIN" SERVER_IP="$SERVER_IP" envsubst '${DOMAIN} ${SERVER_IP}' < "$HTTPS_TMPL" > "$CONF"
         nginx -s reload
         echo "nginx reloaded with HTTPS config"
     fi

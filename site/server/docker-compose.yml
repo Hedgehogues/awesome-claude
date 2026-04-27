@@ -8,6 +8,7 @@ services:
     entrypoint: ["/bin/sh", "/scripts/nginx-entrypoint.sh"]
     environment:
       - DOMAIN=${DOMAIN}
+      - SERVER_IP=${SERVER_IP}
     volumes:
       - ./scripts/nginx-entrypoint.sh:/scripts/nginx-entrypoint.sh:ro
       - ./nginx/conf.d:/etc/nginx/conf.d

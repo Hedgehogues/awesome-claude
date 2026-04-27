@@ -1,12 +1,12 @@
 server {
     listen 80;
-    server_name 34.45.80.225;
+    server_name ${SERVER_IP};
     return 301 https://${DOMAIN}$request_uri;
 }
 
 server {
     listen 443 ssl;
-    server_name 34.45.80.225;
+    server_name ${SERVER_IP};
 
     ssl_certificate /etc/nginx/ssl/selfsigned.crt;
     ssl_certificate_key /etc/nginx/ssl/selfsigned.key;

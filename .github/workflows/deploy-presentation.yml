@@ -65,7 +65,7 @@ jobs:
             fi
             DOMAIN="${{ secrets.DEPLOY_DOMAIN }}"
             SERVER_DIR=~/awesome-claude/site/server
-            printf 'DOMAIN=%s\nCERTBOT_EMAIL=%s\n' "${{ secrets.DEPLOY_DOMAIN }}" "${{ secrets.CERTBOT_EMAIL }}" > "$SERVER_DIR/.env"
+            printf 'DOMAIN=%s\nCERTBOT_EMAIL=%s\nSERVER_IP=%s\n' "${{ secrets.DEPLOY_DOMAIN }}" "${{ secrets.CERTBOT_EMAIL }}" "${{ secrets.DEPLOY_HOST }}" > "$SERVER_DIR/.env"
             if [ ! -f /etc/nginx/ssl/selfsigned.crt ]; then
               sudo mkdir -p /etc/nginx/ssl
               sudo openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
