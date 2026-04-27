@@ -14,7 +14,34 @@ on:
         default: "no"
 
 jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Grant SA roles
+        run: |
+          for role in \
+            roles/storage.admin \
+            roles/compute.admin \
+            roles/dns.admin \
+            roles/serviceusage.serviceUsageAdmin; do
+            gcloud projects add-iam-policy-binding ${{ secrets.GCP_PROJECT_ID }} \
+              --member="serviceAccount:${{ secrets.GCP_SERVICE_ACCOUNT }}" \
+              --role="$role"
+          done
+
   terraform:
+    needs: bootstrap
     runs-on: ubuntu-latest
     env:
       REGRU_API_URL: ${{ secrets.REGRU_API_URL }}
@@ -36,21 +63,6 @@ jobs:
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
       - uses: google-github-actions/setup-gcloud@v2
-
-      - name: Bootstrap SA permissions
-        run: |
-          gcloud projects add-iam-policy-binding ${{ secrets.GCP_PROJECT_ID }} \
-            --member="serviceAccount:${{ secrets.GCP_SERVICE_ACCOUNT }}" \
-            --role="roles/storage.admin"
-          gcloud projects add-iam-policy-binding ${{ secrets.GCP_PROJECT_ID }} \
-            --member="serviceAccount:${{ secrets.GCP_SERVICE_ACCOUNT }}" \
-            --role="roles/compute.admin"
-          gcloud projects add-iam-policy-binding ${{ secrets.GCP_PROJECT_ID }} \
-            --member="serviceAccount:${{ secrets.GCP_SERVICE_ACCOUNT }}" \
-            --role="roles/dns.admin"
-          gcloud projects add-iam-policy-binding ${{ secrets.GCP_PROJECT_ID }} \
-            --member="serviceAccount:${{ secrets.GCP_SERVICE_ACCOUNT }}" \
-            --role="roles/serviceusage.serviceUsageAdmin"
 
       - name: Create Terraform state bucket if not exists
         run: |
