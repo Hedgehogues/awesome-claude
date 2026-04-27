@@ -17,6 +17,16 @@ variable "project_id" {
   sensitive   = true
 }
 
+variable "deploy_ssh_public_key" {
+  description = "SSH public key for deploy user"
+  sensitive   = true
+}
+
+resource "google_compute_project_metadata_item" "ssh_keys" {
+  key   = "ssh-keys"
+  value = "urvanov:${var.deploy_ssh_public_key}"
+}
+
 resource "google_compute_firewall" "allow_http" {
   name    = "default-allow-http"
   network = "default"
