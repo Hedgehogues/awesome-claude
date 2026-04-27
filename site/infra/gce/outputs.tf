@@ -1,6 +1,6 @@
-output "project_id" {
-  description = "GCP project ID"
-  value       = var.project_id
+output "ip" {
+  description = "External IP of the web VM"
+  value       = google_compute_address.web.address
 }
 
 output "region" {
