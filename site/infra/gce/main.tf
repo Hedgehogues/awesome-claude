@@ -22,6 +22,41 @@ variable "project_id" {
 }
 
 
+import {
+  to = google_project_service.iam_credentials
+  id = "${var.project_id}/iamcredentials.googleapis.com"
+}
+
+import {
+  to = google_compute_project_metadata_item.ssh_keys
+  id = "${var.project_id}/ssh-keys"
+}
+
+import {
+  to = google_compute_firewall.allow_http
+  id = "projects/${var.project_id}/global/firewalls/default-allow-http"
+}
+
+import {
+  to = google_compute_firewall.allow_https
+  id = "projects/${var.project_id}/global/firewalls/default-allow-https"
+}
+
+import {
+  to = google_compute_firewall.allow_ssh
+  id = "projects/${var.project_id}/global/firewalls/default-allow-ssh"
+}
+
+import {
+  to = google_compute_firewall.allow_icmp
+  id = "projects/${var.project_id}/global/firewalls/default-allow-icmp"
+}
+
+import {
+  to = google_compute_firewall.allow_internal
+  id = "projects/${var.project_id}/global/firewalls/default-allow-internal"
+}
+
 resource "google_project_service" "iam_credentials" {
   service            = "iamcredentials.googleapis.com"
   disable_on_destroy = false
