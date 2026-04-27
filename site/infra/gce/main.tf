@@ -1,33 +1,3 @@
-import {
-  to = google_compute_project_metadata_item.ssh_keys
-  id = "ssh-keys"
-}
-
-import {
-  to = google_compute_firewall.allow_http
-  id = "projects/${var.project_id}/global/firewalls/default-allow-http"
-}
-
-import {
-  to = google_compute_firewall.allow_https
-  id = "projects/${var.project_id}/global/firewalls/default-allow-https"
-}
-
-import {
-  to = google_compute_firewall.allow_ssh
-  id = "projects/${var.project_id}/global/firewalls/default-allow-ssh"
-}
-
-import {
-  to = google_compute_firewall.allow_icmp
-  id = "projects/${var.project_id}/global/firewalls/default-allow-icmp"
-}
-
-import {
-  to = google_compute_firewall.allow_internal
-  id = "projects/${var.project_id}/global/firewalls/default-allow-internal"
-}
-
 resource "google_compute_project_metadata_item" "ssh_keys" {
   key   = "ssh-keys"
   value = "${var.deploy_user}:${var.deploy_ssh_public_key}"
