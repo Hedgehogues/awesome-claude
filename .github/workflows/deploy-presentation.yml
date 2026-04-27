@@ -74,8 +74,10 @@ jobs:
                 -subj "/CN=$DOMAIN" 2>/dev/null
             fi
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            docker ps -aq --filter "name=presentation-presentation" | xargs -r docker stop 2>/dev/null || true
+            docker ps -aq --filter "name=presentation-presentation" | xargs -r docker rm 2>/dev/null || true
             cd $SERVER_DIR
             docker compose pull
-            docker compose stop
-            docker compose up -d --remove-orphans
+            docker compose down
+            docker compose up -d
             docker image prune -f || true
