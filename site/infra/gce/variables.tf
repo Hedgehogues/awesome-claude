@@ -23,7 +23,6 @@ variable "machine_type" {
 variable "deploy_user" {
   type        = string
   description = "OS login user for deployment"
-  default     = "urvanov"
 }
 
 variable "deploy_ssh_public_key" {

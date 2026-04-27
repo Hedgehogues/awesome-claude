@@ -50,6 +50,7 @@ jobs:
         env:
           TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
           TF_VAR_domain: ${{ secrets.DEPLOY_DOMAIN }}
+          TF_VAR_deploy_user: ${{ secrets.DEPLOY_USER }}
           TF_VAR_deploy_ssh_public_key: ${{ secrets.DEPLOY_SSH_PUBLIC_KEY }}
 
       - name: Terraform apply
@@ -61,6 +62,7 @@ jobs:
         env:
           TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
           TF_VAR_domain: ${{ secrets.DEPLOY_DOMAIN }}
+          TF_VAR_deploy_user: ${{ secrets.DEPLOY_USER }}
           TF_VAR_deploy_ssh_public_key: ${{ secrets.DEPLOY_SSH_PUBLIC_KEY }}
 
       - name: Update NS records at reg.ru
