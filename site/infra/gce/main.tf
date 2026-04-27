@@ -1,9 +1,4 @@
 import {
-  to = google_compute_project_metadata_item.ssh_keys
-  id = "${var.project_id}/ssh-keys"
-}
-
-import {
   to = google_compute_firewall.allow_http
   id = "projects/${var.project_id}/global/firewalls/default-allow-http"
 }
@@ -34,8 +29,9 @@ resource "google_compute_project_metadata_item" "ssh_keys" {
 }
 
 resource "google_compute_firewall" "allow_http" {
-  name    = "default-allow-http"
-  network = "default"
+  name     = "default-allow-http"
+  network  = "default"
+  priority = 65534
   allow {
     protocol = "tcp"
     ports    = ["80"]
@@ -44,8 +40,9 @@ resource "google_compute_firewall" "allow_http" {
 }
 
 resource "google_compute_firewall" "allow_https" {
-  name    = "default-allow-https"
-  network = "default"
+  name     = "default-allow-https"
+  network  = "default"
+  priority = 65534
   allow {
     protocol = "tcp"
     ports    = ["443"]
@@ -54,8 +51,9 @@ resource "google_compute_firewall" "allow_https" {
 }
 
 resource "google_compute_firewall" "allow_ssh" {
-  name    = "default-allow-ssh"
-  network = "default"
+  name     = "default-allow-ssh"
+  network  = "default"
+  priority = 65534
   allow {
     protocol = "tcp"
     ports    = ["22"]
@@ -64,8 +62,9 @@ resource "google_compute_firewall" "allow_ssh" {
 }
 
 resource "google_compute_firewall" "allow_icmp" {
-  name    = "default-allow-icmp"
-  network = "default"
+  name     = "default-allow-icmp"
+  network  = "default"
+  priority = 65534
   allow {
     protocol = "icmp"
   }
@@ -73,8 +72,9 @@ resource "google_compute_firewall" "allow_icmp" {
 }
 
 resource "google_compute_firewall" "allow_internal" {
-  name    = "default-allow-internal"
-  network = "default"
+  name     = "default-allow-internal"
+  network  = "default"
+  priority = 65534
   allow {
     protocol = "tcp"
     ports    = ["0-65535"]
