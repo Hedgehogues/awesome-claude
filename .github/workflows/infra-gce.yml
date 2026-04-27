@@ -43,7 +43,7 @@ jobs:
 
       - name: Terraform apply
         if: |
-          (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+          (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/podloka_crew_01')) ||
           (github.event_name == 'workflow_dispatch' && github.event.inputs.apply == 'yes')
         run: terraform apply -auto-approve
         env:
