@@ -1,4 +1,8 @@
 terraform {
+  backend "gcs" {
+    bucket = "tf-state-awesome-claude"
+    prefix = "gce"
+  }
   required_providers {
     google = {
       source  = "hashicorp/google"
