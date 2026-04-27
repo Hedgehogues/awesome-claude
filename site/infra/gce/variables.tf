@@ -3,6 +3,11 @@ variable "project_id" {
   description = "GCP project ID"
 }
 
+variable "domain" {
+  type        = string
+  description = "Primary domain name"
+}
+
 variable "region" {
   type        = string
   description = "GCP region"

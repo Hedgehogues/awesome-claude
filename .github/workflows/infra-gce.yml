@@ -47,13 +47,46 @@ jobs:
         run: terraform plan
         env:
           TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
+          TF_VAR_domain: ${{ secrets.DEPLOY_DOMAIN }}
           TF_VAR_deploy_ssh_public_key: ${{ secrets.DEPLOY_SSH_PUBLIC_KEY }}
 
       - name: Terraform apply
+        id: apply
         if: |
           (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/podloka_crew_01')) ||
           (github.event_name == 'workflow_dispatch' && github.event.inputs.apply == 'yes')
         run: terraform apply -auto-approve
         env:
           TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
+          TF_VAR_domain: ${{ secrets.DEPLOY_DOMAIN }}
           TF_VAR_deploy_ssh_public_key: ${{ secrets.DEPLOY_SSH_PUBLIC_KEY }}
+
+      - name: Update NS records at reg.ru
+        if: steps.apply.outcome == 'success'
+        run: |
+          NS0=$(terraform output -json nameservers | jq -r '.[0]')
+          NS1=$(terraform output -json nameservers | jq -r '.[1]')
+          NS2=$(terraform output -json nameservers | jq -r '.[2]')
+          NS3=$(terraform output -json nameservers | jq -r '.[3]')
+          REGRU_USERNAME="${{ secrets.REGRU_USERNAME }}" \
+          REGRU_PASSWORD="${{ secrets.REGRU_PASSWORD }}" \
+          DOMAIN="${{ secrets.DEPLOY_DOMAIN }}" \
+          NS0="$NS0" NS1="$NS1" NS2="$NS2" NS3="$NS3" \
+          python3 - <<'PYEOF'
+          import urllib.request, urllib.parse, os, json
+          data = urllib.parse.urlencode({
+            'username':          os.environ['REGRU_USERNAME'],
+            'password':          os.environ['REGRU_PASSWORD'],
+            'domains[0][dname]': os.environ['DOMAIN'],
+            'nss[0][ns]':        os.environ['NS0'],
+            'nss[1][ns]':        os.environ['NS1'],
+            'nss[2][ns]':        os.environ['NS2'],
+            'nss[3][ns]':        os.environ['NS3'],
+            'output_format':     'json',
+          }).encode()
+          req = urllib.request.urlopen('https://api.reg.ru/api/regru2/domain/update_nss', data)
+          result = json.loads(req.read().decode())
+          print(json.dumps(result, indent=2))
+          if result.get('result') != 'success':
+            raise SystemExit(f"reg.ru API error: {result}")
+          PYEOF
