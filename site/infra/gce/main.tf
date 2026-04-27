@@ -1,4 +1,9 @@
 import {
+  to = google_compute_project_metadata_item.ssh_keys
+  id = "ssh-keys"
+}
+
+import {
   to = google_compute_firewall.allow_http
   id = "projects/${var.project_id}/global/firewalls/default-allow-http"
 }
