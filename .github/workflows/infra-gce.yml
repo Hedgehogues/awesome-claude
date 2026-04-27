@@ -37,6 +37,21 @@ jobs:
 
       - uses: google-github-actions/setup-gcloud@v2
 
+      - name: Bootstrap SA permissions
+        run: |
+          gcloud projects add-iam-policy-binding ${{ secrets.GCP_PROJECT_ID }} \
+            --member="serviceAccount:${{ secrets.GCP_SERVICE_ACCOUNT }}" \
+            --role="roles/storage.admin"
+          gcloud projects add-iam-policy-binding ${{ secrets.GCP_PROJECT_ID }} \
+            --member="serviceAccount:${{ secrets.GCP_SERVICE_ACCOUNT }}" \
+            --role="roles/compute.admin"
+          gcloud projects add-iam-policy-binding ${{ secrets.GCP_PROJECT_ID }} \
+            --member="serviceAccount:${{ secrets.GCP_SERVICE_ACCOUNT }}" \
+            --role="roles/dns.admin"
+          gcloud projects add-iam-policy-binding ${{ secrets.GCP_PROJECT_ID }} \
+            --member="serviceAccount:${{ secrets.GCP_SERVICE_ACCOUNT }}" \
+            --role="roles/serviceusage.serviceUsageAdmin"
+
       - name: Create Terraform state bucket if not exists
         run: |
           gcloud storage buckets describe gs://tf-state-awesome-claude 2>/dev/null || \
