@@ -5,6 +5,7 @@ on:
     branches: [main, podloka_crew_01]
     paths:
       - "site/infra/gce/**"
+      - ".github/workflows/infra-gce.yml"
   workflow_dispatch:
     inputs:
       apply:
@@ -32,8 +33,29 @@ jobs:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Create Terraform state bucket if not exists
+        run: |
+          gcloud storage buckets describe gs://tf-state-awesome-claude 2>/dev/null || \
+          gcloud storage buckets create gs://tf-state-awesome-claude --location=us-central1
+
       - name: Terraform init
         run: terraform init
+
+      - name: Import existing resources
+        run: |
+          P=${{ secrets.GCP_PROJECT_ID }}
+          terraform import google_compute_firewall.allow_http   "projects/$P/global/firewalls/default-allow-http"   2>/dev/null || true
+          terraform import google_compute_firewall.allow_https  "projects/$P/global/firewalls/default-allow-https"  2>/dev/null || true
+          terraform import google_compute_firewall.allow_ssh    "projects/$P/global/firewalls/default-allow-ssh"    2>/dev/null || true
+          terraform import google_compute_firewall.allow_icmp   "projects/$P/global/firewalls/default-allow-icmp"   2>/dev/null || true
+          terraform import google_compute_firewall.allow_internal "projects/$P/global/firewalls/default-allow-internal" 2>/dev/null || true
+          terraform import google_compute_project_metadata_item.ssh_keys "$P/ssh-keys" 2>/dev/null || true
+          terraform import google_project_service.iam_credentials "$P/iamcredentials.googleapis.com" 2>/dev/null || true
+        env:
+          TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
+          TF_VAR_deploy_ssh_public_key: ${{ secrets.DEPLOY_SSH_PUBLIC_KEY }}
 
       - name: Terraform plan
         run: terraform plan
