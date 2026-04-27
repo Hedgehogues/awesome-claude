@@ -16,6 +16,8 @@ on:
 jobs:
   terraform:
     runs-on: ubuntu-latest
+    env:
+      REGRU_API_URL: ${{ vars.REGRU_API_URL }}
     permissions:
       id-token: write
       contents: read
@@ -71,6 +73,7 @@ jobs:
           REGRU_USERNAME="${{ secrets.REGRU_USERNAME }}" \
           REGRU_PASSWORD="${{ secrets.REGRU_PASSWORD }}" \
           DOMAIN="${{ secrets.DEPLOY_DOMAIN }}" \
+          REGRU_API_URL="$REGRU_API_URL" \
           NS0="$NS0" NS1="$NS1" NS2="$NS2" NS3="$NS3" \
           python3 - <<'PYEOF'
           import urllib.request, json, os
@@ -83,7 +86,7 @@ jobs:
             'output_format': 'json',
           }).encode()
           req = urllib.request.Request(
-            'https://api.reg.ru/api/regru2/domain/update_nss',
+            os.environ['REGRU_API_URL'],
             data=payload,
             headers={'Content-Type': 'application/json'},
           )
