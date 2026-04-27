@@ -18,6 +18,11 @@ variable "project_id" {
 }
 
 
+resource "google_project_service" "iam_credentials" {
+  service            = "iamcredentials.googleapis.com"
+  disable_on_destroy = false
+}
+
 variable "deploy_ssh_public_key" {
   description = "SSH public key for deploy user"
   sensitive   = true
