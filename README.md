@@ -15,11 +15,11 @@ Battle-tested rules, skills, and agents that turn Claude Code into a senior engi
 
 <br>
 
-```
-git clone git@github.com:Hedgehogues/awesome-claude.git .claude
+```bash
+curl -fsSL https://raw.githubusercontent.com/Hedgehogues/awesome-claude/release-0.6.0/scripts/install.sh | bash
 ```
 
-Clone. Start Claude Code. Everything loads automatically.
+Run. Start Claude Code. Everything loads automatically.
 
 </div>
 
@@ -44,18 +44,30 @@ Out of the box, Claude Code is powerful but generic. It doesn't know your archit
 
 ```
 .claude/
-├── rules/           15 project-specific conventions (~60K chars)
-│   ├── arch/        DDD contracts, tests, security, state ownership
-│   ├── break-stop.md     hard stop when tests break
-│   ├── git.md            structured commit messages
-│   ├── frontend-*.md     UI design, testing, components
-│   └── meta-rules.md     how to write rules (see also docs/RULES_GUIDE.md)
-├── skills/          slash commands (/tdd, /commit, /tracing, ...)
+├── rules/                   project-specific conventions
+│   ├── arch/                DDD contracts, tests, security, state ownership
+│   ├── break-stop.md        hard stop when tests break
+│   ├── git.md               structured commit messages
+│   ├── frontend-*.md        UI design, testing, components
+│   └── meta-rules.md        how to write rules
+├── skills/                  skill implementations (loaded on demand)
+│   ├── dev/                 /dev:tdd, /dev:commit, /dev:tracing, ...
+│   ├── report/              /report:describe, /report:session-report
+│   ├── research/            /research:triz
+│   └── sdd/                 /sdd:propose, /sdd:apply, /sdd:archive, ...
+├── commands/                slash command entry points
+│   ├── dev/
+│   ├── report/
+│   ├── research/
+│   └── sdd/
+├── scripts/
+│   ├── install.sh           install or update awesome-claude
+│   └── bump-namespace.sh    update a single namespace to latest
 └── docs/
-    ├── SKILL_DESIGN.md        how to write skills: inline vs fork, model selection, hooks
-    ├── RULES_GUIDE.md         how to write rules that don't waste tokens
-    ├── REPO_ORGANIZATION.md   monorepo structure, DDD anatomy, 3-agent rule
-    └── STRANGLER_PATTERN.md   reorganize bounded contexts without breaking the system
+    ├── SKILL_DESIGN.md      how to write skills: inline vs fork, model selection
+    ├── RULES_GUIDE.md       how to write rules that don't waste tokens
+    ├── REPO_ORGANIZATION.md monorepo structure, DDD anatomy, 3-agent rule
+    └── STRANGLER_PATTERN.md reorganize bounded contexts without breaking
 ```
 
 ---
@@ -88,23 +100,25 @@ paths:
 ## Quick Start
 
 ```bash
-# 1. Clone into your project root
-git clone git@github.com:Hedgehogues/awesome-claude.git .claude
+# 1. Install into your project root
+curl -fsSL https://raw.githubusercontent.com/Hedgehogues/awesome-claude/release-0.6.0/scripts/install.sh | bash
 
-# 2. Exclude from your project's git (it has its own repo)
+# 2. Exclude from your project's git
 echo ".claude/" >> .gitignore
 
 # 3. Start Claude Code -- everything loads automatically
 claude
 ```
 
-**Updating:**
+**Updating a namespace:**
 
 ```bash
-cd .claude && git pull
+# Update only what you need
+bash .claude/scripts/bump-namespace.sh dev
+bash .claude/scripts/bump-namespace.sh sdd
 ```
 
-That's it. No config files. No setup scripts. No dependencies.
+Each namespace is versioned independently. Dependencies are resolved automatically.
 
 ---
 
@@ -137,62 +151,50 @@ graph LR
     style FORK fill:#FFF3E0,stroke:#FF9800,stroke-width:2px
 ```
 
-#### Engineering & Architecture
+#### `dev:` — Engineering & Development
 
 | Command | What It Does | Model |
 |---------|-------------|-------|
-| **`/tdd`** | Full TDD cycle: PlantUML diagrams, test plan, red tests, green implementation, refactor. Covers unit/state/security/integration/e2e. | Opus |
-| **`/triz`** | TRIZ problem-solving: ARIZ-85V algorithm -- contradiction analysis, IFR, 40 inventive principles, vepole analysis, structured resolution. | Opus |
-| **`/tracing`** | Traces bugs across all layers (frontend -> API -> backend -> DB). Generates PlantUML sequence + C4 component diagrams showing the failure path. | Opus |
-| **`/ui`** | Senior UI/UX engineer: TDD-first React components with accessibility, responsive design, visual cohesion. | Opus |
-| **`/arch-gap`** | TOGAF-style gap analysis: baseline vs target architecture, transition plan via TDD, gap matrix with risks. | Opus |
-| **`/init-repo`** | Scaffolds a full DDD monorepo: FastAPI backend (entity, repo, use case, routes) + React 19 frontend + architecture tests. `make check` passes out of the box. [Design doc](skills/init-repo/DESIGN.md). | Sonnet |
+| **`/dev:tdd`** | Full TDD cycle: test plan, red tests, green implementation, refactor. Covers unit/state/security/integration/e2e. | Opus |
+| **`/dev:tracing`** | Traces bugs across all layers (frontend → API → backend → DB). Generates sequence + C4 diagrams showing the failure path. | Opus |
+| **`/dev:fix-bug`** | Combines `/dev:tracing` (root cause) + `/dev:tdd` (test-first fix). Two-phase bug repair. | Opus |
+| **`/dev:fix-tests`** | Fixes failing tests by modifying **logic, not tests**. Tests are the spec. | Sonnet |
+| **`/dev:dead-features`** | Finds implemented but unreachable functionality. Checks connectivity across layers. | Sonnet |
+| **`/dev:init-repo`** | Scaffolds a full DDD monorepo: FastAPI + React 19 + architecture tests. `make check` passes out of the box. | Sonnet |
+| **`/dev:commit`** | Analyzes all changes, drafts structured commit (What/Why/Details), waits for approval. Never auto-pushes. | Haiku |
+| **`/dev:deploy`** | Docker rebuild + container restart + Alembic migrations. | Haiku |
+| **`/dev:test-all`** | Runs every test suite across all packages (unit, integration, e2e). Reports delta vs previous run. | Haiku |
 
-#### Fix & Refactor
-
-| Command | What It Does | Model |
-|---------|-------------|-------|
-| **`/fix-bug`** | Combines `/tracing` (root cause analysis) + `/tdd` (test-first fix). Two-phase bug repair. | Opus |
-| **`/fix-tests`** | Fixes failing tests by modifying **logic, not tests**. Tests are the spec -- implementation must conform. | Sonnet |
-| **`/remove-feature`** | Surgical feature removal: traces dependency graph, classifies files (DELETE/EDIT/ADAPT), removes along critical path only. | Opus |
-| **`/dead-features`** | Finds implemented but user-unreachable functionality. Checks connectivity across layers (endpoints <-> UI, exports <-> imports). | Sonnet |
-
-#### Workflow & Ops
+#### `report:` — Summaries & Descriptions
 
 | Command | What It Does | Model |
 |---------|-------------|-------|
-| **`/commit`** | Analyzes all changes, drafts structured commit (What/Why/Details), shows plan, waits for your approval. Never auto-pushes. | Haiku |
-| **`/deploy`** | Docker rebuild + container restart + Alembic migrations. Adapt to your stack. | Haiku |
-| **`/test-all`** | Runs every test suite across all packages (unit, integration, e2e). Reports statistics with delta vs previous run. | Haiku |
-| **`/describe`** | One-paragraph product description of what was done or what's planned. Stakeholder-friendly, no tech details. | Haiku |
-| **`/session-report`** | Generates product-focused summary from current conversation context. No git commands -- pure introspection. | Haiku |
-| **`/pipe`** | Meta-orchestrator: chains skills sequentially (`/pipe triz,tdd Fix the button`). Each phase runs in a dedicated Agent. | Opus |
+| **`/report:describe`** | One-paragraph product description of what was done. Stakeholder-friendly, no tech details. | Haiku |
+| **`/report:session-report`** | Product-focused summary from current conversation context. Pure introspection. | Haiku |
 
-### How `/pipe` Works
+#### `research:` — Analysis & Problem Solving
 
-Chain any skills into a sequential pipeline. Output of each phase feeds into the next:
+| Command | What It Does | Model |
+|---------|-------------|-------|
+| **`/research:triz`** | TRIZ problem-solving: ARIZ-85V algorithm — contradiction analysis, IFR, 40 inventive principles, vepole analysis. | Opus |
 
-```
-/pipe triz,ui     "Sidebar is cramped on mobile"
-       │    │
-       │    └── Phase 2: UI engineer implements the TRIZ solution
-       └─────── Phase 1: TRIZ analyzes the contradiction
-```
+#### `sdd:` — Spec-Driven Development (OpenSpec)
 
-```
-/pipe tracing,tdd "Delete button doesn't work after deploy"
-       │       │
-       │       └── Phase 2: TDD writes tests + fix for the root cause
-       └──────── Phase 1: Tracing finds where the request breaks
-```
+Requires [OpenSpec CLI](https://openspec.dev): `npm install -g @fission-ai/openspec@latest && openspec init`
 
-### Bootstrapping a Project
-
-```bash
-/init-repo acme-crm leads
-```
-
-Generates a ready-to-run monorepo with backend (FastAPI DDD with `leads` bounded context), frontend (React 19 + Vite), root orchestration (Makefile, docker-compose), and tests that pass immediately. See the [architecture diagrams](skills/init-repo/DESIGN.md).
+| Command | What It Does |
+|---------|-------------|
+| **`/sdd:propose`** | Propose a new change: generate proposal, design, specs, tasks in one step |
+| **`/sdd:apply`** | Implement tasks from tasks.md |
+| **`/sdd:archive`** | Archive completed change, sync delta specs to `openspec/specs/` |
+| **`/sdd:explore`** | Enter exploration mode — non-linear, applicable at any phase |
+| **`/sdd:help`** | Show repo state and full workflow pipeline |
+| **`/sdd:contradiction`** | Check change artifacts for contradictions and broken references |
+| **`/sdd:change-verify`** | Verify implementation against tasks.md |
+| **`/sdd:spec-verify`** | Verify implementation against live spec in `openspec/specs/` |
+| **`/sdd:audit`** | Audit manifest consistency (structural + semantic) |
+| **`/sdd:repo`** | Add / update branch / remove submodule via guided flow |
+| **`/sdd:sync`** | Initialize and synchronize submodules |
 
 ---
 
@@ -371,11 +373,21 @@ Yes. Delete the `rules/` directory. Skills and agents work independently.
 <details>
 <summary><strong>How do I update?</strong></summary>
 
+Update a specific namespace to the latest version:
+
 ```bash
-cd .claude && git pull
+bash .claude/scripts/bump-namespace.sh dev
+bash .claude/scripts/bump-namespace.sh sdd
 ```
 
-Since `.claude/` is its own git repo (excluded from your project via `.gitignore`), updating is just a pull.
+Or use the slash command from Claude Code:
+
+```
+/dev:bump-version
+/sdd:bump-version
+```
+
+Each namespace is versioned independently. If a namespace has dependencies on others, they are updated automatically.
 
 </details>
 
