@@ -1,5 +1,5 @@
 ---
-name: tdd
+name: dev:tdd
 description: >
   TDD workflow: writes tests FIRST, runs them (red), writes implementation (green),
   refactors. Works as a senior QA automation engineer with 20 years of experience.

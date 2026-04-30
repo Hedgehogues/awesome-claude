@@ -1,5 +1,5 @@
 ---
-name: fix-tests
+name: dev:fix-tests
 description: >
   Fix failing tests by modifying LOGIC, not tests. Tests are the spec — implementation
   must conform. Runs tests, classifies each failure (fixable / ambiguous / unfixable),

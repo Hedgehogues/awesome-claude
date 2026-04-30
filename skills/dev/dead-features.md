@@ -1,5 +1,5 @@
 ---
-name: dead-features
+name: dev:dead-features
 description: >
   Feature audit: finds implemented but user-unreachable functionality in any project.
   Discovers tech stack and architecture automatically, then checks connectivity between

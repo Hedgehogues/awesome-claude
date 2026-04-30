@@ -1,5 +1,5 @@
 ---
-name: deploy
+name: dev:deploy
 description: >
   Rebuild, redeploy, and run migrations for the project.
   Auto-detects services from docker-compose.yml, migration tool from codebase,

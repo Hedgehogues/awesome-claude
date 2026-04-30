@@ -1,5 +1,5 @@
 ---
-name: fix-bug
+name: dev:fix-bug
 description: >
   Bug fixer: traces root cause via /tracing (analysis only), then fixes via /tdd
   (test-first implementation). Combines incident analysis with TDD-driven repair.

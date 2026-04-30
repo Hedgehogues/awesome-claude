@@ -1,5 +1,5 @@
 ---
-name: commit
+name: dev:commit
 description: >
   Create a well-structured git commit following project conventions.
   Analyzes staged and unstaged changes, drafts a detailed commit message

@@ -1,5 +1,5 @@
 ---
-name: session-report
+name: report:session-report
 description: >
   Generate a product-focused session report based on actions performed in the current conversation.
   Analyzes own tool calls (Edit, Write, Bash) from context, groups by product themes, and outputs

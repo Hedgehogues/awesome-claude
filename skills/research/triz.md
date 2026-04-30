@@ -1,5 +1,5 @@
 ---
-name: triz
+name: research:triz
 description: >
   TRIZ problem-solving engineer: applies ARIZ-85V algorithm to analyze contradictions,
   define the Ideal Final Result, mobilize resources, and resolve technical/physical

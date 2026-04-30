@@ -1,5 +1,5 @@
 ---
-name: tracing
+name: dev:tracing
 description: >
   Tracing & incident analyzer: traces why a feature doesn't work after deploy,
   locates the root cause in code across all layers (frontend → API → backend → DB),

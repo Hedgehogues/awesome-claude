@@ -1,5 +1,5 @@
 ---
-name: test-all
+name: dev:test-all
 description: >
   Run ALL tests across ALL packages — including expensive integration tests
   (real API keys, real DB) and E2E (Playwright). Auto-detects project structure,

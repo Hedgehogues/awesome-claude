@@ -2,3 +2,9 @@ plans/
 worktrees/
 agent-memory/
 settings.local.json
+
+# Claude
+.claude/
+CLAUDE.md
+
+.DS_Store

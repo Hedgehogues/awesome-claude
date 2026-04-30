@@ -1,5 +1,5 @@
 ---
-name: init-repo
+name: dev:init-repo
 description: >
   Initialize a DDD monorepo with backend (FastAPI, SQLAlchemy, multi-BC architecture)
   and frontend (React 19, Vite, TypeScript) packages. Scaffolds full project structure:
