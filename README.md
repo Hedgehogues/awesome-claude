@@ -6,6 +6,11 @@
 
 Battle-tested conventions that turn Claude into a senior engineer on your team.
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Claude Code](https://img.shields.io/badge/Claude_Code-compatible-blueviolet)](https://claude.ai/code)
+[![Skills](https://img.shields.io/badge/skills-16-orange)](#skills)
+[![Rules](https://img.shields.io/badge/rules-15-green)](#rules)
+
 </div>
 
 ---
