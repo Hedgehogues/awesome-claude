@@ -148,3 +148,35 @@ RESULT: 2 passed, 1 failed  (total checks: 16)
 ```
 
 Если есть FAILED — вывести первые 20 строк `OUTPUT` упавшего кейса.
+
+### 5. Status tracking and cleanup
+
+**Before running cases:** Create `$RUN_ROOT/status.json`:
+```json
+{
+  "started_at": "2026-05-02T03:15:00Z",
+  "test": "<ns>:<skill>",
+  "run_root": "<RUN_ROOT>",
+  "cases": []
+}
+```
+
+**For each case:** Update status in `$RUN_ROOT/status.json`:
+```json
+{
+  "name": "<case-name>",
+  "verdict": "passed|failed",
+  "tmp_path": "<RUN_ROOT>/case-<N>",
+  "duration_ms": 5234
+}
+```
+
+**After all cases complete:** Print summary:
+```
+Run root: $RUN_ROOT (cleaned up)
+```
+
+If `--keep-tmp=all` flag: Print `Run root: <RUN_ROOT>` (path preserved for debugging).
+If `--keep-tmp=failed-only`: Copy failed case dirs to `~/.cache/skill-test/<run-id>/` and print that path.
+
+**Auto-cleanup:** The `trap "rm -rf '$RUN_ROOT'" EXIT` ensures $RUN_ROOT is deleted on success, failure, or Ctrl+C.
