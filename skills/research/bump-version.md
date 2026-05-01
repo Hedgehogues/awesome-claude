@@ -8,5 +8,5 @@ description: >
 Run the bump-namespace script for the research namespace:
 
 ```bash
-bash .claude/scripts/bump-namespace.sh research
+bash "${CLAUDE_SKILL_DIR}/scripts/bump-namespace.sh" research
 ```

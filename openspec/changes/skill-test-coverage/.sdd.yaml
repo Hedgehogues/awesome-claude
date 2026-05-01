@@ -1,0 +1,18 @@
+creates:
+  - sdd-apply-cases
+  - sdd-archive-cases
+  - sdd-change-verify-cases
+  - sdd-remaining-cases
+  - dev-namespace-cases
+  - report-namespace-cases
+  - research-namespace-cases
+  - orphan-stubs-wired
+  - skill-namespace-rename
+  - auto-fill-creates
+  - contradiction-script-location
+  - test-plan-to-semantic-cases
+  - claude-way-install-removed
+  - bump-version-cases
+merges-into:
+  - test-plan-link
+  - design-formatter

@@ -15,11 +15,9 @@ Battle-tested rules, skills, and agents that turn Claude Code into a senior engi
 
 <br>
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/Hedgehogues/awesome-claude/release-0.6.0/scripts/install.sh | bash
-```
+Open Claude Code and ask: **"Install awesome-claude from github.com/Hedgehogues/awesome-claude"**
 
-Run. Start Claude Code. Everything loads automatically.
+Everything loads automatically.
 
 </div>
 
@@ -61,8 +59,7 @@ Out of the box, Claude Code is powerful but generic. It doesn't know your archit
 │   ├── research/
 │   └── sdd/
 ├── scripts/
-│   ├── install.sh           install or update awesome-claude
-│   └── bump-namespace.sh    update a single namespace to latest
+│   └── install.sh           bootstrap installer (internal)
 └── docs/
     ├── SKILL_DESIGN.md      how to write skills: inline vs fork, model selection
     ├── RULES_GUIDE.md       how to write rules that don't waste tokens
@@ -99,23 +96,58 @@ paths:
 
 ## Quick Start
 
+**1. Open Claude Code in any project directory**
+
+**2. Ask Claude to install awesome-claude:**
+
+> Install awesome-claude from github.com/Hedgehogues/awesome-claude
+
+Claude clones the repository and copies files into `.claude/`. Everything loads automatically.
+
+**3. Exclude from your project's git:**
+
 ```bash
-# 1. Install into your project root
-curl -fsSL https://raw.githubusercontent.com/Hedgehogues/awesome-claude/release-0.6.0/scripts/install.sh | bash
-
-# 2. Exclude from your project's git
 echo ".claude/" >> .gitignore
-
-# 3. Start Claude Code -- everything loads automatically
-claude
 ```
+
+**Install only what you need:**
+
+Ask Claude to install specific components:
+
+> Install only the `dev` namespace from awesome-claude
+
+> Install `dev` and `sdd` from awesome-claude
+
+> Install `dev`, `report`, `research`, `sdd` without rules from awesome-claude
+
+> Install only rules from awesome-claude
+
+Available components: `dev`, `report`, `research`, `sdd`, `rules`
+
+**Contributing to awesome-claude (dev mode):**
+
+Ask Claude to install with dev skills:
+
+> Install awesome-claude in dev mode from github.com/Hedgehogues/awesome-claude
+
+```
+# Test a specific skill
+/skill:test-skill sdd:help
+
+# Test all skills
+/skill:test-all
+
+# Test all skills in a namespace
+/skill:test-all sdd
+```
+
+`skill:*` skills are dev-only — not included in regular user installs. Test specs live in `skills/skill/cases/<namespace>/<skill>.md`.
 
 **Updating a namespace:**
 
-```bash
-# Update only what you need
-bash .claude/scripts/bump-namespace.sh dev
-bash .claude/scripts/bump-namespace.sh sdd
+```
+/dev:bump-version
+/sdd:bump-version
 ```
 
 Each namespace is versioned independently. Dependencies are resolved automatically.
@@ -182,17 +214,29 @@ graph LR
 
 Requires [OpenSpec CLI](https://openspec.dev): `npm install -g @fission-ai/openspec@latest && openspec init`
 
+```mermaid
+graph LR
+    P["/sdd:propose"] --> C["/sdd:contradiction"]
+    C --> A["/sdd:apply"]
+    A --> CV["/sdd:change-verify"]
+    CV --> AR["/sdd:archive"]
+    AR --> SV["/sdd:spec-verify"]
+    SV --> AU["/sdd:audit"]
+
+    style C fill:#FFF3E0,stroke:#FF9800,stroke-width:2px
+```
+
 | Command | What It Does |
 |---------|-------------|
 | **`/sdd:propose`** | Propose a new change: generate proposal, design, specs, tasks in one step |
-| **`/sdd:apply`** | Implement tasks from tasks.md |
-| **`/sdd:archive`** | Archive completed change, sync delta specs to `openspec/specs/` |
-| **`/sdd:explore`** | Enter exploration mode — non-linear, applicable at any phase |
-| **`/sdd:help`** | Show repo state and full workflow pipeline |
 | **`/sdd:contradiction`** | Check change artifacts for contradictions and broken references |
+| **`/sdd:apply`** | Implement tasks from tasks.md |
 | **`/sdd:change-verify`** | Verify implementation against tasks.md |
+| **`/sdd:archive`** | Archive completed change, sync delta specs to `openspec/specs/` |
 | **`/sdd:spec-verify`** | Verify implementation against live spec in `openspec/specs/` |
 | **`/sdd:audit`** | Audit manifest consistency (structural + semantic) |
+| **`/sdd:explore`** | Enter exploration mode — non-linear, applicable at any phase |
+| **`/sdd:help`** | Show repo state and full workflow pipeline |
 | **`/sdd:repo`** | Add / update branch / remove submodule via guided flow |
 | **`/sdd:sync`** | Initialize and synchronize submodules |
 
@@ -234,6 +278,20 @@ Rules load automatically based on file path matching. When you edit `src/domain/
 | `ui-library.md` | 4-layer component architecture (tokens -> primitives -> shared -> domain) |
 
 </details>
+
+---
+
+## Interface
+
+awesome-claude follows the **Claude-way principle**: the only interface is Claude Code. Every operation — installing, updating, running skills — is done by talking to Claude. Direct system calls (`bash`, `curl`) are internal implementation details, not the public API.
+
+| Operation | How |
+|-----------|-----|
+| Install | Ask Claude Code to install from GitHub |
+| Update namespace | `/dev:bump-version`, `/sdd:bump-version`, etc. |
+| Run a skill | Type `/skill-name` in Claude Code |
+
+`scripts/` exists as internal plumbing — it is not part of the user-facing API.
 
 ---
 
@@ -373,14 +431,7 @@ Yes. Delete the `rules/` directory. Skills and agents work independently.
 <details>
 <summary><strong>How do I update?</strong></summary>
 
-Update a specific namespace to the latest version:
-
-```bash
-bash .claude/scripts/bump-namespace.sh dev
-bash .claude/scripts/bump-namespace.sh sdd
-```
-
-Or use the slash command from Claude Code:
+Use the slash command in Claude Code:
 
 ```
 /dev:bump-version

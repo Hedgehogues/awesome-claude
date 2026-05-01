@@ -395,3 +395,91 @@ allowed-tools: Bash(git log *), Read
 ```
 
 ~30 lines. Precomputed context. Clear output template. Haiku handles this perfectly.
+
+---
+
+## SDD Layer Artifacts
+
+SDD-слой добавляет несколько обязательных артефактов в каждую change-директорию.
+
+### Change-директория (полная структура)
+
+```
+openspec/changes/<name>/
+├── proposal.md       ← ссылается на .sdd.yaml
+├── design.md
+├── tasks.md
+├── test-plan.md      ← обязательный SDD-артефакт
+└── .sdd.yaml         ← машиночитаемое объявление capabilities
+```
+
+### test-plan.md
+
+YAML front matter + markdown body. Создаётся автоматически в `sdd:propose`. Читается в `sdd:apply`. Копируется в `openspec/specs/<capability>/` при архивировании.
+
+```markdown
+---
+approach: |
+  Describe test approach here
+acceptance_criteria:
+  - criterion one
+  - criterion two
+---
+
+## Scenarios
+
+Describe scenarios in prose here.
+```
+
+- `approach` — текстовое описание стратегии тестирования
+- `acceptance_criteria` — список условий приёмки
+- `## Scenarios` — сценарии в свободной форме
+
+### .sdd.yaml
+
+Машиночитаемое объявление того, что создаёт или модифицирует change. Создаётся автоматически в `sdd:propose`. Читается `sdd:contradiction` для определения scope анализа.
+
+```yaml
+creates:
+  - capability-name        # новые capabilities, создаваемые этим change'ем
+merges-into:
+  - other-capability       # существующие capabilities, которые change модифицирует
+```
+
+- `creates` — список новых capability-имён (kebab-case)
+- `merges-into` — список существующих capabilities, затрагиваемых change'ем; `[]` если только новые
+
+### openspec/specs/index.yaml
+
+Единый машиночитаемый реестр всех финализированных спек. Обновляется автоматически в `sdd:apply` и `sdd:archive`. Читается `contradiction.py` для сборки пакета анализа.
+
+```yaml
+specs:
+  - capability: user-auth
+    description: Authentication and authorization
+    path: user-auth/spec.md
+    test_plan: user-auth/test-plan.md
+  - capability: session-management
+    description: Session lifecycle management
+    path: session-management/spec.md
+    test_plan: session-management/test-plan.md
+```
+
+Каждая запись содержит:
+- `capability` — уникальное имя (kebab-case)
+- `description` — краткое описание (одна строка)
+- `path` — путь к `spec.md` относительно `openspec/specs/`
+- `test_plan` — путь к `test-plan.md` относительно `openspec/specs/`
+
+### Обязательные секции design.md
+
+`sdd:propose` проверяет, что `design.md` содержит все четыре секции стандартной openspec-структуры:
+
+```
+## Technical Approach
+## Architecture Decisions
+## Data Flow
+## File Changes
+```
+
+Если секция отсутствует — автор получает сообщение с требованием добавить её перед продолжением.

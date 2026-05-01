@@ -11,6 +11,29 @@ description: >
 
 # Contradiction checker (sdd:contradiction)
 
+## Cross-spec preamble (если PATH — change-директория)
+
+Если PATH является change-директорией (содержит `proposal.md`), перед основным анализом:
+
+1. Найди `contradiction.py` в `scripts/` рядом со скиллом: `${CLAUDE_SKILL_DIR}/scripts/contradiction.py`
+2. Вызови через Bash tool:
+   ```bash
+   python "${CLAUDE_SKILL_DIR}/scripts/contradiction.py" "<change-dir-absolute-path>" 2>&1
+   ```
+3. Прочитай stdout. Он содержит:
+   - Specs всех capabilities из `openspec/specs/index.yaml`
+   - Summary: `total_discovered`, `total_loaded`, `skipped`
+   - Warnings о missing files
+4. Включи загруженные спеки в scope анализа наравне с локальными артефактами change'а.
+5. В отчёте добавь строку после заголовка:
+   `Analyzed: <total_loaded> capabilities from index` (или `index.yaml not found` если скрипт сообщил об этом).
+6. Capabilities, пропущенные из-за missing files, перечисли в отдельной секции отчёта:
+   `--- Skipped capabilities ---`
+
+Если PATH — не change-директория (файл, произвольная директория) — пропусти этот шаг молча.
+
+---
+
 Никакого внешнего кода, Python-модуля, curated-словаря или fixture-тестов нет. Всё делаешь ты, модель, в одном прогоне.
 
 ## Input handling

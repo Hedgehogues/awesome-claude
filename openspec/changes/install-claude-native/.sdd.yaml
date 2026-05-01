@@ -1,0 +1,4 @@
+creates:
+  - claude-native-install
+merges-into:
+  - user-interface-principle

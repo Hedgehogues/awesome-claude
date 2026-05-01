@@ -1,0 +1,45 @@
+specs:
+  - capability: user-interface-principle
+    description: >
+      Зафиксированный принцип Claude-way — пользователь взаимодействует только через Claude Code:
+      никаких прямых системных вызовов (bash, curl и т.д.) и никакой ручной работы в репо напрямую.
+      Включает принципы гранулярности скилла, жизненного цикла артефакта и работы со
+      структурированными данными.
+    path: user-interface-principle/spec.md
+    test_plan: user-interface-principle/test-plan.md
+  - capability: test-plan-link
+    description: >
+      Обязательный test-plan.md в директории change: YAML front matter (approach,
+      acceptance_criteria) + markdown body (## Scenarios). sdd:propose создаёт stub,
+      sdd:apply читает как контекст, sdd:archive копирует в openspec/specs/<capability>/
+      и блокирует если файл отсутствует.
+    path: test-plan-link/spec.md
+    test_plan: test-plan-link/test-plan.md
+  - capability: design-formatter
+    description: >
+      Форматтер структуры design.md: sdd:propose проверяет наличие четырёх обязательных
+      секций (## Technical Approach, ## Architecture Decisions, ## Data Flow,
+      ## File Changes) и ссылки на .sdd.yaml в proposal.md перед продолжением.
+    path: design-formatter/spec.md
+    test_plan: design-formatter/test-plan.md
+  - capability: proposal-merge-deps
+    description: >
+      Файл .sdd.yaml в директории change декларирует creates (новые capabilities) и
+      merges-into (существующие capabilities, затронутые change'ом). proposal.md содержит
+      явную ссылку на .sdd.yaml. sdd:propose создаёт stub автоматически.
+    path: proposal-merge-deps/spec.md
+    test_plan: proposal-merge-deps/test-plan.md
+  - capability: spec-index-yaml
+    description: >
+      Единый реестр всех финальных спек: openspec/specs/index.yaml со списком capabilities,
+      путями к spec.md и test-plan.md. sdd:apply добавляет записи, sdd:archive синхронизирует,
+      contradiction.py читает для сборки пакета анализа.
+    path: spec-index-yaml/spec.md
+    test_plan: spec-index-yaml/test-plan.md
+  - capability: contradiction-full-scan
+    description: >
+      Python-скрипт contradiction.py рядом со скиллом собирает пакет спек по index.yaml
+      и .sdd.yaml текущего change; Claude анализирует пакет на противоречия между
+      capabilities и формирует отчёт с покрытием и списком найденных противоречий.
+    path: contradiction-full-scan/spec.md
+    test_plan: contradiction-full-scan/test-plan.md

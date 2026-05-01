@@ -6,12 +6,6 @@ description: >
   a concise stakeholder-friendly summary in Russian. No git commands — pure context introspection.
 argument-hint: "[optional: 'short' for bullet-only, 'full' for detailed with insights]"
 model: haiku
-hooks:
-  PreToolUse:
-    - matcher: "Bash"
-      hooks:
-        - type: command
-          command: "${CLAUDE_SKILL_DIR}/scripts/reject-git.sh"
 ---
 
 # Задача
