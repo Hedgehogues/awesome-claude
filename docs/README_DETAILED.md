@@ -15,6 +15,8 @@ Battle-tested rules, skills, and agents that turn Claude Code into a senior engi
 
 <br>
 
+**For installation instructions, see [CLAUDE_INSTALL.md](../CLAUDE_INSTALL.md)**
+
 Open Claude Code and ask: **"Install awesome-claude from github.com/Hedgehogues/awesome-claude"**
 
 Everything loads automatically.
