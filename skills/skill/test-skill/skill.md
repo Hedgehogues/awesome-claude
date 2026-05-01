@@ -17,7 +17,7 @@ allowed-tools: Bash, Read, Agent
 
 Из `$ARGUMENTS` извлеки `NS` и `SKILL`.
 
-Читай `skills/skill/cases/$NS/$SKILL.md`.
+Читай `skills/$NS/$SKILL/cases/$SKILL.md`.
 Если не найдена → `SKIP: no test spec for $ARGUMENTS`.
 
 ### 2. Разбей спеку на кейсы
@@ -31,7 +31,7 @@ allowed-tools: Bash, Read, Agent
 
 #### 3a. Загрузи стаб
 
-Читай `skills/skill/stubs/<stub-name>.md`. Разбери YAML frontmatter:
+Читай `skills/skill/test-skill/stubs/<stub-name>.md`. Разбери YAML frontmatter:
 - `git.branch`, `git.commits[]`
 - `skills.<ns>[]` — список имён скиллов
 - `openspec.changes[]` — список имён changes (опционально)
@@ -57,8 +57,8 @@ git commit --allow-empty -m "<commit>" --quiet
 
 Для каждого скилла из `skills.<ns>`:
 ```bash
-mkdir -p "$TMP/.claude/skills/$NS"
-cp "skills/$NS/<skill>.md" "$TMP/.claude/skills/$NS/"
+mkdir -p "$TMP/.claude/skills/$NS/<skill>"
+cp "skills/$NS/<skill>/skill.md" "$TMP/.claude/skills/$NS/<skill>/"
 ```
 Также скопируй `skills/$NS/.manifest`.
 
@@ -91,7 +91,7 @@ done
 
 #### 3c. Запусти скилл в агенте
 
-Прочитай `skills/$NS/$SKILL.md`. Удали frontmatter (`---…---`).
+Прочитай `skills/$NS/$SKILL/skill.md`. Удали frontmatter (`---…---`).
 
 **Если есть mock_commands или env**, подготовь окружение:
 

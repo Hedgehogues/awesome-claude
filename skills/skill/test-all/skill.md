@@ -1,8 +1,9 @@
 ---
 name: skill:test-all
 description: >
-  Запускает все тесты скиллов. Обнаруживает тест-спеки в skills/skill/cases/,
-  запускает каждый через логику test-skill, выводит сводную таблицу.
+  Запускает все тесты скиллов. Обнаруживает тест-спеки в skills/*/*/cases/,
+  запускает каждый через логику test-skill, выводит сводную таблицу,
+  проверяет TDD-coverage матрицу.
 argument-hint: "[namespace]  — ограничить по неймспейсу"
 model: sonnet
 allowed-tools: Bash, Read, Agent, Glob
@@ -15,7 +16,7 @@ $ARGUMENTS
 ## Контекст (предвычислено)
 
 ### Тест-спеки
-!`find skills/skill/cases -name "*.md" 2>/dev/null | sort`
+!`find skills/*/*/cases -name "*.md" 2>/dev/null | sort`
 
 ## Шаги
 
@@ -23,9 +24,9 @@ $ARGUMENTS
 
 Из вывода `find` выше составь список файлов.
 
-Если передан аргумент (имя неймспейса) — оставь только спеки из `skills/skill/cases/$ARGUMENTS/`.
+Если передан аргумент (имя неймспейса) — оставь только спеки из `skills/$ARGUMENTS/*/cases/`.
 
-Для каждого файла `skills/skill/cases/<ns>/<skill>.md` → тест `<ns>:<skill>`.
+Для каждого файла `skills/<ns>/<skill>/cases/<skill>.md` → тест `<ns>:<skill>`.
 
 Если список пуст → `NO TESTS FOUND` и завершить.
 
@@ -51,7 +52,19 @@ Total: N passed, M failed, K skipped
 
 Если есть FAILED — вывести диагностику (первые 20 строк output агента) для каждого.
 
-### 4. Вердикт
+### 4. Проверь TDD-coverage
 
-- 0 FAILED: `✅ ALL TESTS PASSED`
-- Есть FAILED: `❌ FAILURES DETECTED — see above`
+Запусти Python скрипт для проверки того, что все скиллы имеют полное покрытие (4 категории):
+
+```bash
+python skills/skill/test-all/scripts/check-coverage-matrix.py
+```
+
+Выведи результаты:
+- ✓ All skills have complete TDD coverage
+- или список skills с неполным покрытием (missing categories)
+
+### 5. Вердикт
+
+- 0 FAILED + coverage OK: `✅ ALL TESTS PASSED & COVERAGE COMPLETE`
+- Есть FAILED или coverage incomplete: `❌ FAILURES OR COVERAGE ISSUES DETECTED — see above`
