@@ -8,15 +8,15 @@ semantic:
   - blocked: skill stops immediately and does not invoke openspec-archive-change
   - no_archive: change directory is not moved to archive
 
-## Case: happy-path-copies-test-plan
+## Case: happy-path-no-copy-to-specs
 stub: change-with-sdd-yaml
 contains:
   - "test-plan.md"
-  - "openspec/specs"
+  - "archive"
 semantic:
   - archive_proceeds: skill calls openspec-archive-change without blocking
-  - test_plan_copy: output references copying test-plan.md to openspec/specs/<capability>/test-plan.md
-  - capability_resolved: my-capability from .sdd.yaml.creates is used as target directory
+  - test_plan_stays_in_archive: test-plan.md remains in archived change directory (openspec/changes/archive/<date>-<name>/)
+  - no_specs_copy: skill does NOT copy test-plan.md to openspec/specs/<capability>/test-plan.md
 
 ## Case: index-yaml-update
 stub: change-with-sdd-yaml

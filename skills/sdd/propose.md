@@ -42,10 +42,13 @@ description: >
    TODO: describe scenarios here.
    ```
 
-5. **Проверь структуру `design.md`** — обязательны все четыре секции:
-   `## Technical Approach`, `## Architecture Decisions`, `## Data Flow`, `## File Changes`.
-   Если секция отсутствует → выведи: `design.md is missing section: <section name>`
-   и запроси исправление от автора. После исправления повтори проверку.
+5. **Проверь структуру `design.md`** — вызови `check-design.py` через Bash tool:
+   ```bash
+   python3 "${CLAUDE_SKILL_DIR}/scripts/check-design.py" "openspec/changes/<name>"
+   ```
+   Скрипт проверяет наличие 4 обязательных openspec-секций (наследуется от `openspec instructions design --json`):
+   `## Context`, `## Goals / Non-Goals`, `## Decisions`, `## Risks / Trade-offs`.
+   Если скрипт возвращает non-zero exit и сообщает о missing section → запроси исправление от автора и повтори проверку.
 
 6. **Проверь что `proposal.md` ссылается на `.sdd.yaml`**.
    Если ссылки нет → выведи: `proposal.md does not reference .sdd.yaml`

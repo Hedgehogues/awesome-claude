@@ -13,6 +13,9 @@ creates:
   - test-plan-to-semantic-cases
   - claude-way-install-removed
   - bump-version-cases
+  - mock-stubs-extended
+  - skill-tdd-coverage-policy
+  - test-execution-lifecycle
 merges-into:
   - test-plan-link
   - design-formatter

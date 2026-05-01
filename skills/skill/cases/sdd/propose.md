@@ -27,8 +27,9 @@ semantic:
   - reference_check: if proposal.md lacks reference to .sdd.yaml, propose reports
       "proposal.md does not reference .sdd.yaml"
 
-## Case: design-formatter
+## Case: design-formatter-openspec-sections
 stub: change-with-sdd-yaml
 semantic:
-  - design_sections: if design.md is missing any of Technical Approach, Architecture Decisions,
-      Data Flow, File Changes — propose reports "design.md is missing section: <name>"
+  - design_sections: if design.md is missing any of Context, Goals / Non-Goals,
+      Decisions, Risks / Trade-offs (per openspec template) — propose invokes
+      check-design.py and reports "design.md is missing section: <name>"; propose blocks until fix

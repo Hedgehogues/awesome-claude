@@ -3,7 +3,8 @@ name: sdd:archive
 workflow_step: 8
 description: >
   Архивировать завершённый change, синкнуть delta specs в openspec/specs/.
-  Проверяет наличие test-plan.md. Копирует test-plan.md в specs/.
+  Проверяет наличие test-plan.md. test-plan.md остаётся в архивной директории
+  как историческая запись (не копируется в openspec/specs/<capability>/).
   OpenSpec CLI устанавливается автоматически по версии из .openspec-version.
 ---
 
@@ -19,7 +20,7 @@ description: >
 
 4. Вызови скилл `openspec-archive-change` через Skill tool. Передай аргументы: $ARGUMENTS
 
-5. **После архивирования**: прочитай `openspec/changes/<name>/.sdd.yaml`.
-   Для каждой capability в поле `creates`:
-   - Скопируй `openspec/changes/<name>/test-plan.md` → `openspec/specs/<capability>/test-plan.md`
-   Если `.sdd.yaml` отсутствует или `creates` пуст — пропусти этот шаг.
+5. **test-plan.md остаётся в архивной директории**: после переезда change'а в
+   `openspec/changes/archive/<date>-<name>/`, `test-plan.md` остаётся там как историческая запись.
+   НЕ копируется в `openspec/specs/<capability>/`. Semantic test cases для capabilities
+   генерируются скриптом `test-plan-to-cases.py` на этапе `sdd:apply`.

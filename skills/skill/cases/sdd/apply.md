@@ -10,6 +10,7 @@ semantic:
   - test_plan_read: skill reads test-plan.md from change directory and uses acceptance_criteria as context
   - index_updated: openspec/specs/index.yaml is updated with entry for "my-capability" from .sdd.yaml creates field
   - sdd_yaml_consumed: skill reads .sdd.yaml to determine which capabilities to register
+  - cases_generated: skill invokes test-plan-to-cases.py and generates semantic case files at skills/skill/cases/<ns>/my-capability/
 
 ## Case: no-sdd-yaml-skip-index
 stub: fresh-repo

@@ -11,18 +11,21 @@
 - Подключить существующие «осиротевшие» стабы (`change-missing-test-plan`, `change-with-sdd-yaml`, `specs-with-index`) к конкретным кейсам
 - Переместить `contradiction.py` в `skills/sdd/scripts/` для консистентности с другими неймспейсами
 - В `sdd:propose` автоматически заполнять `creates:` в `.sdd.yaml` из `### New Capabilities` proposal.md вместо пустого stub'а
-- **Spec expansion (§11):** test-plan.md больше не копируется в `specs/`; вместо этого генерируются semantic test cases в `skills/skill/cases/<namespace>/<capability>/` через скрипт `test-plan-to-cases.py`. test-plan.md остаётся в архивной директории change'а
-- **Spec correction (§12):** `design-formatter` приводится к реальной openspec-структуре (Context / Goals / Decisions / Risks); прежний кастом из sdd-layer-artifacts D5 (Technical Approach / Architecture Decisions / Data Flow / File Changes) отменяется как не из openspec CLI
+- test-plan.md больше не копируется в `specs/`; вместо этого генерируются semantic test cases в `skills/skill/cases/<namespace>/<capability>/` через скрипт `test-plan-to-cases.py` (см. design.md → D10)
+- `design-formatter` приводится к реальной openspec-структуре (Context / Goals / Decisions / Risks); прежний кастом из sdd-layer-artifacts D5 отменяется (см. design.md → D11)
 - Переименовать `__dev` → `skill` во всех трёх локациях (`skills/`, `commands/`, `.claude/skills/`)
-- **Scope expansion (§10):** удалить `scripts/install.sh` целиком — обнаружено в §9.7, что shell-скрипт установки противоречит правилу `claude-way.md` (единственный интерфейс — Claude Code). Откат §9.7 (обновление константы в install.sh) + удаление файла
-- **Scope expansion (§13):** добавить кейсы для четырёх `bump-version` скиллов (по одному в каждом namespace: sdd, dev, report, research) — обнаружено в ходе coverage-аудита, что namespace-level bump (commit 1dafd1b) не имел тестового покрытия
+- Удалить `scripts/install.sh` целиком (см. design.md → D9 для rationale); установка/обновление выполняется только через Claude Code в соответствии с `rules/claude-way.md`
+- Добавить кейсы для четырёх `bump-version` скиллов (по одному в каждом namespace: sdd, dev, report, research) (см. design.md → D12)
+- Расширить формат stubs: добавить `files:`, `mock_commands:`, `env:` для тестирования сложных сценариев (deploy, build, docker) на моковых данных в изолированной среде (см. design.md → D13)
+- Ввести TDD coverage policy: для каждого скилла обязательны 4 категории кейсов (positive-happy, positive-corner, negative-missing-input, negative-invalid-input); проверяется при создании/правке скилла (см. design.md → D14)
+- Test execution lifecycle: единый RUN_ROOT через `mktemp -d` + `trap EXIT` (паттерн `bump-namespace.sh`); status.json внутри RUN_ROOT; авто-cleanup устраняет накопление tmp-мусора (см. design.md → D15)
 
 ## Capabilities
 
 ### New Capabilities
 
 - `sdd-apply-cases`: кейсы для `sdd:apply` — чтение test-plan.md как контекста, обновление index.yaml
-- `sdd-archive-cases`: кейсы для `sdd:archive` — блокировка при отсутствии test-plan.md, копирование test-plan.md в specs/
+- `sdd-archive-cases`: кейсы для `sdd:archive` — блокировка при отсутствии test-plan.md, архивирование без копирования test-plan.md в specs/ (per Modified `test-plan-link`), обновление index.yaml
 - `sdd-change-verify-cases`: кейсы для `sdd:change-verify` — L1/L2/L3 проверки, human_needed
 - `sdd-remaining-cases`: кейсы для `audit`, `explore`, `repo`, `spec-verify`, `sync`
 - `dev-namespace-cases`: кейсы для всех `dev:*` скиллов
@@ -35,6 +38,9 @@
 - `test-plan-to-semantic-cases`: скрипт `test-plan-to-cases.py` генерирует semantic test cases в `skills/skill/cases/<ns>/<cap>/` из acceptance_criteria в test-plan.md; вызывается в `sdd:apply` после обновления index.yaml
 - `claude-way-install-removed`: `scripts/install.sh` удалён; установка/обновление выполняется только через Claude Code в соответствии с `claude-way.md`
 - `bump-version-cases`: тест-кейсы для четырёх `bump-version` скиллов (по 2 кейса каждый) в `skills/skill/cases/{sdd,dev,report,research}/bump-version.md`
+- `mock-stubs-extended`: расширение формата stubs полями `files:`, `mock_commands:`, `env:`. `skill:test-skill` материализует файлы в `$TMP`, создаёт shim-скрипты в `$TMP/.mocks/` (добавляются в PATH), экспортирует переменные. Позволяет тестировать deploy, build, docker-сценарии на моковых данных
+- `skill-tdd-coverage-policy`: обязательная матрица из 4 категорий кейсов на каждый скилл (positive-happy, positive-corner, negative-missing-input, negative-invalid-input); правило `rules/skill-tdd-coverage.md`; `skill:test-all` флагает скиллы с покрытием < 4 категорий; `sdd:propose` (при создании нового скилла) автогенерирует stub-кейсы по 4 категориям
+- `test-execution-lifecycle`: единый `RUN_ROOT=$(mktemp -d -t skill-test-XXXXXX)` на весь прогон + `trap "rm -rf $RUN_ROOT" EXIT` для авто-cleanup (паттерн из `bump-namespace.sh`); `$RUN_ROOT/status.json` для отчётности; флаг `--keep-tmp=none|failed-only|all` для отладки
 
 ### Modified Capabilities
 

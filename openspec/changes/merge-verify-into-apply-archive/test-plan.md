@@ -21,6 +21,8 @@ acceptance_criteria:
   - resume работает: повторный /sdd:apply после обрыва на verifying не повторяет реализацию
   - .gitignore содержит **/.sdd-state.yaml; git status не показывает state-файлы
   - workflow_step индексы в frontmatter обновлены (apply=6, archive=7); /sdd:help выводит pipeline без verify-узлов
+  - после archive файлы в openspec/specs/<cap>/spec.md НЕ содержат поля owner: (assertion: grep -L "^owner:" openspec/specs/**/spec.md)
+  - /sdd:propose НЕ модифицирует openspec/specs/index.yaml (assertion: git diff --exit-code openspec/specs/index.yaml после propose возвращает 0)
 ---
 
 ## Scenarios
@@ -121,3 +123,27 @@ acceptance_criteria:
 4. SDD-скилл останавливается с инструкцией пользователю.
 
 **Expected:** скилл не молча подставляет фейковую identity; явная ошибка.
+
+### Scenario: Owner живёт только в change-уровне (live spec не получает owner)
+
+**Setup:** change `feature-x` с `owner: user@example.com` в `.sdd.yaml`, capability `feature-x` в `creates:`. Полный workflow до archive завершён успешно.
+
+**Steps:**
+1. После `/sdd:archive feature-x` проверить `openspec/specs/feature-x/spec.md`.
+2. Прогнать assertion: `grep -c "^owner:" openspec/specs/feature-x/spec.md` → 0.
+3. Прогнать assertion для всех live-spec'ов: `grep -l "^owner:" openspec/specs/**/spec.md` → пусто.
+4. Открыть архив `openspec/changes/archive/<date>-feature-x/.sdd.yaml` — там `owner:` сохранён.
+
+**Expected:** owner присутствует только в `.sdd.yaml` (включая архивированную версию); в live `openspec/specs/` ни один файл не содержит поле `owner:`.
+
+### Scenario: Index.yaml read-only в /sdd:propose
+
+**Setup:** репозиторий с непустым `openspec/specs/index.yaml`. Текущая HEAD чистая.
+
+**Steps:**
+1. Запустить `/sdd:propose new-change-x` (включая merge-dialog при наличии пересечений).
+2. После завершения propose выполнить: `git diff --exit-code openspec/specs/index.yaml`.
+3. Команда MUST возвращать exit-code 0 (нет изменений).
+4. Проверить, что новые записи в `index.yaml` появляются ТОЛЬКО после `/sdd:apply` (для `creates:`) или `/sdd:archive` (для `merges-into:` sync).
+
+**Expected:** propose не модифицирует index.yaml ни при каком сценарии (включая выбор «merges-into» в merge-dialog — запись в index.yaml откладывается до apply/archive).

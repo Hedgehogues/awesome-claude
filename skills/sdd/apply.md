@@ -26,3 +26,11 @@ description: >
    ```
    Если `openspec/specs/index.yaml` не существует — создай его с корневым ключом `specs:`.
    Если `.sdd.yaml` отсутствует или `creates` пуст — пропусти этот шаг.
+
+5. **Сгенерируй semantic test cases из test-plan.md**: вызови через Bash tool:
+   ```bash
+   python3 "${CLAUDE_SKILL_DIR}/scripts/test-plan-to-cases.py" "openspec/changes/<name>"
+   ```
+   Скрипт читает `test-plan.md` (front matter `acceptance_criteria`) и `.sdd.yaml` (`creates`),
+   генерирует `skills/skill/cases/<ns>/<cap>/<ac_id>.md` для каждого критерия.
+   Если `test-plan.md` или `.sdd.yaml` отсутствуют — скрипт ничего не делает.

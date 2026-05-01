@@ -18,7 +18,7 @@ The previous list (`Technical Approach`, `Architecture Decisions`, `Data Flow`, 
 - **THEN** author is prompted to fix before proceeding
 
 ### Requirement: Format rules are documented in SKILL_DESIGN.md
-**REPLACED.** `docs/SKILL_DESIGN.md` SHALL document the required openspec structure of `design.md` (inherited from openspec CLI template), not the prior custom list.
+`docs/SKILL_DESIGN.md` SHALL document the required openspec structure of `design.md` (inherited from openspec CLI template), not the prior custom list.
 
 #### Scenario: Developer reads SKILL_DESIGN.md
 - **WHEN** developer reads the design.md structure section

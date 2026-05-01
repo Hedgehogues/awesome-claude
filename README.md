@@ -58,8 +58,6 @@ Out of the box, Claude Code is powerful but generic. It doesn't know your archit
 │   ├── report/
 │   ├── research/
 │   └── sdd/
-├── scripts/
-│   └── install.sh           bootstrap installer (internal)
 └── docs/
     ├── SKILL_DESIGN.md      how to write skills: inline vs fork, model selection
     ├── RULES_GUIDE.md       how to write rules that don't waste tokens
