@@ -184,6 +184,37 @@ Reading `.sdd.yaml`, parsing `tasks.md`, parsing the detailed detector report's 
 - **THEN** it invokes `archive_report.py` to obtain the list of archived capabilities and their on-disk paths
 - **THEN** the LLM only renders the four-block markdown template
 
+### Requirement: Communication style in the three workflow skill reports
+
+The skills `sdd:apply`, `sdd:contradiction`, and `sdd:archive` SHALL follow these communication-style rules in their final user-facing report:
+
+1. **Action over question (default).** Forks resolvable by reasonable assumption SHALL be resolved autonomously and recorded in `## Решено самостоятельно`. A question SHALL appear in `## Вопросы к пользователю` only when answering it requires knowledge or preferences Claude does not possess.
+2. **Output shape matches request shape.** The seven-block report format SHALL be used ONLY for the final output of these three skills. Intermediate exchanges (clarifications, partial updates, meta-questions inside the skill's run) SHALL use plain prose of 2–3 sentences without markdown section headings.
+3. **Action before narration.** When a skill performs `Edit`/`Write` on the user's behalf and the user did not explicitly request a plan, the skill SHALL execute the action first and report a 1–2 line summary afterwards. Pre-action narration is permitted only for destructive or long-running side-effecting operations (push, deploy, schema drop).
+4. **No internal jargon in user-facing blocks.** The `## Описание` and `## Решено самостоятельно` blocks MUST NOT contain detector-internal terminology such as `hard issue`, `drift_score`, `residual_risk`, `SSOT`, `pointer-rewrite`, `Mandatory-блок N`, `convergence`, or `decision gate`. Such terms MAY appear inside `## Технические статусы` of `sdd:contradiction` (where the detailed detector report is embedded verbatim). User-facing blocks SHALL paraphrase in plain language.
+
+#### Scenario: Autonomous fork resolution
+- **WHEN** during a skill's run there is a fork with a clearly preferable choice based on context (e.g. file naming convention, available command, structural consistency)
+- **THEN** the skill resolves the fork without asking the user
+- **THEN** the resolved fork appears as a single line in `## Решено самостоятельно`
+- **THEN** `## Вопросы к пользователю` does not contain a question for that fork
+
+#### Scenario: Intermediate prose response
+- **WHEN** the user sends a clarification or meta-question inside the skill's run (before the final report is produced)
+- **THEN** the skill replies in plain prose of 2–3 sentences
+- **THEN** no `## Технические статусы` / `## Описание` / `## Вопросы к пользователю` headings are emitted in that intermediate reply
+
+#### Scenario: Action before narration on Edit/Write
+- **WHEN** the skill needs to perform `Edit` or `Write` to fulfil the user's request and the request did not explicitly ask for a plan
+- **THEN** the skill performs the `Edit`/`Write` first
+- **THEN** the skill emits a 1–2 line summary after the action ("file X updated", "section Y replaced")
+
+#### Scenario: Plain-language paraphrase of detector findings
+- **WHEN** `sdd:contradiction` produces the user-facing wrapper and a hard issue exists inside the detailed detector report
+- **THEN** the `## Описание` block describes the issue in plain language ("одна строка в design.md устарела после вставки нового блока — нумерация разъехалась")
+- **THEN** terms like `hard issue`, `numeric detector`, `drift_score` do NOT appear in `## Описание` or `## Решено самостоятельно`
+- **THEN** those terms MAY still appear inside `## Технические статусы` (the embedded detailed report is verbatim and unmodified)
+
 ### Requirement: Existing sdd:contradiction detector report is preserved verbatim
 
 The existing detailed detector report format produced by `sdd:contradiction` (Hard issues / Soft warnings / Subjects covered / Summary, defined in `skills/sdd/contradiction.md` → "Report format") SHALL be preserved without modification. The new four-block user-facing wrapper SHALL embed the existing report verbatim inside the `## Технические статусы` section.

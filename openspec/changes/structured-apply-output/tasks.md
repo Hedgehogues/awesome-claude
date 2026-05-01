@@ -52,8 +52,16 @@
 - [ ] 5.15 В `skills/skill/cases/sdd/archive.md` добавить кейс «no «Как проверить» block in archive report»: `semantic:` — заголовок `## Как проверить` отсутствует.
 - [ ] 5.16 Зеркалировать все обновлённые case-файлы в `.claude/skills/skill/cases/sdd/`.
 
-## 6. Документация и валидация
+## 6. Правила коммуникационного стиля
 
-- [ ] 6.1 Обновить `docs/SKILL_DESIGN.md` (если описывает формат вывода скиллов) — упомянуть 4-блочную структуру как стандарт для трёх workflow-скиллов.
-- [ ] 6.2 Прогнать `skill:test-skill sdd:apply`, `skill:test-skill sdd:contradiction`, `skill:test-skill sdd:archive` локально — все кейсы зелёные.
-- [ ] 6.3 Прогнать `sdd:contradiction openspec/changes/structured-apply-output/` — без hard issues; warnings допустимы и обоснованы.
+- [ ] 6.1 В `skills/sdd/apply.md`, `skills/sdd/contradiction.md`, `skills/sdd/archive.md` добавить раздел «Communication style» (или одноимённую вставку в финальный шаг отчёта) — реализовать Requirement *«Communication style in the three workflow skill reports»* из `specs/structured-apply-output/spec.md`.
+- [ ] 6.2 Зеркалировать в `.claude/skills/sdd/{apply,contradiction,archive}.md`.
+- [ ] 6.3 В `skills/skill/cases/sdd/apply.md`, `contradiction.md`, `archive.md` добавить кейс «no detector jargon in user-facing blocks»: `semantic:`-проверка, что строки `hard issue`, `drift_score`, `SSOT`, `pointer-rewrite`, `Mandatory-блок` отсутствуют в `## Описание` и `## Решено самостоятельно` (для contradiction жаргон допускается только внутри `## Технические статусы`).
+- [ ] 6.4 В `skills/skill/cases/sdd/apply.md` добавить кейс «intermediate clarifications use prose, not block format»: `semantic:`-проверка, что промежуточные ответы скилла на уточняющие сообщения пользователя не содержат заголовков `## Технические статусы` / `## Описание` / `## Вопросы к пользователю`.
+- [ ] 6.5 Зеркалировать обновлённые case-файлы в `.claude/skills/skill/cases/sdd/`.
+
+## 7. Документация и валидация
+
+- [ ] 7.1 Обновить `docs/SKILL_DESIGN.md` (если описывает формат вывода скиллов) — упомянуть 7-блочную структуру и правила коммуникационного стиля как стандарт для трёх workflow-скиллов.
+- [ ] 7.2 Прогнать `skill:test-skill sdd:apply`, `skill:test-skill sdd:contradiction`, `skill:test-skill sdd:archive` локально — все кейсы зелёные.
+- [ ] 7.3 Прогнать `sdd:contradiction openspec/changes/structured-apply-output/` — без hard issues; warnings допустимы и обоснованы.

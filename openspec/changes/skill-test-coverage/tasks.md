@@ -142,3 +142,14 @@
 - [ ] 16.5 Финальный отчёт `skill:test-skill` SHALL печатать: `Run root: $RUN_ROOT (cleaned up)` или `Run root: <preserved-path>` при `--keep-tmp`
 - [ ] 16.6 Зеркалить обновлённые `test-skill.md` и `test-all.md` в `.claude/skills/skill/`
 - [ ] 16.7 Кейс в `skills/skill/cases/skill/test-skill.md` (если такой файл есть) или новая capability test: проверить что после прогона `$RUN_ROOT` отсутствует на диске
+
+## 17. Documentation refactor & installation (capability: docs-refactor-installation)
+
+**Контекст:** старый README.md — 465 строк, слишком детальный для first-time пользователя. Инструкции для Claude не явны. Нужна разделение: минималистичный README для людей, явный CLAUDE_INSTALL.md для Claude, детали в docs/.
+
+- [ ] 17.1 Переместить старый README.md → `docs/README_DETAILED.md` (уже done)
+- [ ] 17.2 Создать новый минималистичный `README.md` (70 строк): что это, как установить, список скиллов по неймспейсам с одной строкой каждый (уже done)
+- [ ] 17.3 Создать `CLAUDE_INSTALL.md`: явная инструкция для Claude как устанавливать awesome-claude и что делать после (уже done)
+- [ ] 17.4 Обновить `.claude/CLAUDE.md`: инструкции для Claude как использовать awesome-claude после установки (скилл, rules, как работает)
+- [ ] 17.5 Обновить `docs/README_DETAILED.md`: добавить ссылку на CLAUDE_INSTALL.md в начало ("For installation instructions, see CLAUDE_INSTALL.md")
+- [ ] 17.6 Зеркалить CLAUDE_INSTALL.md в `.claude/` если требуется (проверить нужно ли)

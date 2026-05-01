@@ -16,6 +16,7 @@ creates:
   - mock-stubs-extended
   - skill-tdd-coverage-policy
   - test-execution-lifecycle
+  - docs-refactor-installation
 merges-into:
   - test-plan-link
   - design-formatter
