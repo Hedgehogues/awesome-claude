@@ -20,6 +20,7 @@
 - Ввести TDD coverage policy: для каждого скилла обязательны 4 категории кейсов (positive-happy, positive-corner, negative-missing-input, negative-invalid-input); проверяется при создании/правке скилла (см. design.md → D14)
 - Test execution lifecycle: единый RUN_ROOT через `mktemp -d` + `trap EXIT` (паттерн `bump-namespace.sh`); status.json внутри RUN_ROOT; авто-cleanup устраняет накопление tmp-мусора (см. design.md → D15)
 - Документация переструктурирована: `README.md` минималистичный (что это, как установить, список скиллов), старый детальный README → `docs/README_DETAILED.md`, новый `CLAUDE_INSTALL.md` с явной инструкцией для Claude как устанавливать awesome-claude (см. design.md → D16)
+- Структура скиллов переорганизована: каждый скилл в отдельной папке `skills/<ns>/<skill>/skill.md` вместо `skills/<ns>/<skill>.md`; скрипты в `<skill>/scripts/`, кейсы в `<skill>/cases/`; касается всех неймспейсов (dev, sdd, report, research) (см. design.md → D17)
 
 ## Capabilities
 
@@ -43,6 +44,7 @@
 - `skill-tdd-coverage-policy`: обязательная матрица из 4 категорий кейсов на каждый скилл (positive-happy, positive-corner, negative-missing-input, negative-invalid-input); правило `rules/skill-tdd-coverage.md`; `skill:test-all` флагает скиллы с покрытием < 4 категорий; `sdd:propose` (при создании нового скилла) автогенерирует stub-кейсы по 4 категориям
 - `test-execution-lifecycle`: единый `RUN_ROOT=$(mktemp -d -t skill-test-XXXXXX)` на весь прогон + `trap "rm -rf $RUN_ROOT" EXIT` для авто-cleanup (паттерн из `bump-namespace.sh`); `$RUN_ROOT/status.json` для отчётности; флаг `--keep-tmp=none|failed-only|all` для отладки
 - `docs-refactor-installation`: `README.md` переписан супер-минималистично (70 строк); старый README архивирован в `docs/README_DETAILED.md`; новый `CLAUDE_INSTALL.md` содержит явную инструкцию для Claude как устанавливать awesome-claude из GitHub
+- `skills-folder-reorganization`: каждый скилл в отдельной папке; `skills/<ns>/<skill>/skill.md` вместо `skills/<ns>/<skill>.md`; скрипты и кейсы локализованы в папке скилла; касается всех 16 скиллов и всех 4 неймспейсов
 
 ### Modified Capabilities
 

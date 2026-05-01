@@ -153,3 +153,20 @@
 - [ ] 17.4 Обновить `.claude/CLAUDE.md`: инструкции для Claude как использовать awesome-claude после установки (скилл, rules, как работает)
 - [ ] 17.5 Обновить `docs/README_DETAILED.md`: добавить ссылку на CLAUDE_INSTALL.md в начало ("For installation instructions, see CLAUDE_INSTALL.md")
 - [ ] 17.6 Зеркалить CLAUDE_INSTALL.md в `.claude/` если требуется (проверить нужно ли)
+
+## 18. Skills folder reorganization (spec: skills-folder-reorganization)
+
+**Контекст:** скиллы лежат плоско в `skills/dev/`, `skills/sdd/` и т.д. Скрипты и cases разбросаны. При добавлении новых скриптов/cases сложно ориентироваться. Нужна иерархия: каждый скилл в своей папке.
+
+- [ ] 18.1 Переместить все скиллы dev namespace: `skills/dev/<skill>/skill.md` (9 скиллов: tdd, fix-bug, tracing, fix-tests, dead-features, init-repo, commit, deploy, test-all)
+- [ ] 18.2 Переместить скрипты dev: `skills/dev/<skill>/scripts/` если есть
+- [ ] 18.3 Переместить cases dev: `skills/skill/cases/dev/` → `skills/dev/<skill>/cases/` (или оставить в skills/skill/cases/)
+- [ ] 18.4 Переместить все скиллы sdd namespace: `skills/sdd/<skill>/skill.md` (11 скиллов: propose, apply, archive, audit, change-verify, contradiction, explore, help, repo, spec-verify, sync)
+- [ ] 18.5 Переместить скрипты sdd: contradiction.py, check-design.py, test-plan-to-cases.py → `skills/sdd/<skill>/scripts/`
+- [ ] 18.6 Переместить cases sdd: `skills/skill/cases/sdd/` → `skills/sdd/<skill>/cases/`
+- [ ] 18.7 Переместить все скиллы report namespace: `skills/report/<skill>/skill.md` (2 скилла: describe, session-report)
+- [ ] 18.8 Переместить все скиллы research namespace: `skills/research/<skill>/skill.md` (1 скилл: triz)
+- [ ] 18.9 Переместить skill-тестирующие скиллы: `skills/skill/<skill>/skill.md` (2 скилла: test-skill, test-all)
+- [ ] 18.10 Обновить paths в .claude/commands/ если требуется (точки входа могут остаться неизменными)
+- [ ] 18.11 Зеркалить всю структуру в `.claude/skills/` (все папки и скрипты)
+- [ ] 18.12 Обновить все ссылки в documentation и другие места где упоминаются пути к скиллам

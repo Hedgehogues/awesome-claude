@@ -17,6 +17,7 @@ creates:
   - skill-tdd-coverage-policy
   - test-execution-lifecycle
   - docs-refactor-installation
+  - skills-folder-reorganization
 merges-into:
   - test-plan-link
   - design-formatter
