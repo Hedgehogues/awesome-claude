@@ -37,17 +37,23 @@ You ask Claude → .claude/ detected → Rules loaded (by file path)
 
 ## Skills
 
-Type `/namespace:skill` to run a full workflow.
+16 slash commands that run full workflows — not just prompts.
 
-**dev:** `/dev:tdd` `/dev:fix-bug` `/dev:commit` `/dev:deploy` `/dev:test-all`
+**Write code the right way:**
+- `/dev:tdd` — Red → green → refactor
+- `/dev:fix-bug` — Trace root cause, then fix
+- `/dev:commit` — Structured commit: What/Why/Details
 
-**sdd:** `/sdd:propose` `/sdd:apply` `/sdd:archive` `/sdd:audit`
+**Manage changes:**
+- `/sdd:propose` — Design + specs + tasks in one step
+- `/sdd:apply` — Implement checklist
+- `/sdd:archive` — Archive and verify
 
-**report:** `/report:describe`
+**Get clarity:**
+- `/report:describe` — One-paragraph summary
+- `/research:triz` — Solve contradictions
 
-**research:** `/research:triz`
-
-See [docs/README_DETAILED.md](docs/README_DETAILED.md) for all 16 skills.
+Full list: [docs/README_DETAILED.md](docs/README_DETAILED.md)
 
 ---
 
