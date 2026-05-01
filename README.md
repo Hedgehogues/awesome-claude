@@ -10,9 +10,12 @@
 
 ## Install
 
-Open Claude Code and ask:
+**For Claude Code:** Run this command:
+```bash
+git clone --depth 1 --branch main https://github.com/Hedgehogues/awesome-claude /tmp/ac && cp -r /tmp/ac/.claude . && rm -rf /tmp/ac
+```
 
-> "Install awesome-claude from https://github.com/Hedgehogues/awesome-claude"
+Or ask Claude: "Install awesome-claude from https://github.com/Hedgehogues/awesome-claude"
 
 ---
 
