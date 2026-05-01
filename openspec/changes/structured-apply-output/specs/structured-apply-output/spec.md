@@ -86,41 +86,39 @@ When the data source for the fourth block is empty (no implemented features, no 
 - **THEN** `## Архивированные артефакты` is rendered with the body `_нет_`
 - **THEN** the heading itself is still present
 
-### Requirement: Questions block is last and ends with a mandatory CTA
+### Requirement: Questions block is last and contains real questions or `Продолжаю.`
 
 The `## Вопросы к пользователю` section in all three skills SHALL be the **last block** of the user-facing report. Any content not requiring user reaction (technical facts, prose, per-skill итог, autonomous decisions, miscellaneous notes) SHALL appear above this block.
 
 The section SHALL contain ONLY questions whose answers require knowledge or preferences that Claude does not possess: business priorities, domain decisions, personal user preferences, or trade-offs with equivalent technical consequences. Questions that Claude is able to answer autonomously MUST NOT appear in this section — they belong in `## Решено самостоятельно`. Rhetorical questions and exploratory follow-ups MAY appear in `## Прочее` or be omitted.
 
-The **last line** of the section SHALL be a call-to-action question. The default CTA is the literal string `Продолжаем по флоу? (да / нет)`. When no other user-only questions exist, the section consists of exactly one numbered line: `1. Продолжаем по флоу? (да / нет)`. When user-only questions exist, they are numbered first; the CTA is rendered as the final numbered line.
+When real user-only questions exist, they are rendered as a numbered list. When no real user-only questions exist, the section body SHALL contain exactly the literal statement `Продолжаю.` (a single line, not numbered, not phrased as a question).
+
+**Synthetic CTAs are forbidden.** A question of the form `Продолжаем по флоу? (да / нет)` (or any equivalent procedural prompt without a real user-side decision) MUST NOT be appended to the section. The user has no real choice when continuation is the default; asking the question creates ritual noise. Either ask a real question, or state `Продолжаю.`
 
 #### Scenario: All decisions are autonomous
 - **WHEN** all forks encountered during the skill's run can be decided by Claude itself
-- **THEN** `## Вопросы к пользователю` contains exactly one numbered question: `1. Продолжаем по флоу? (да / нет)`
+- **THEN** `## Вопросы к пользователю` contains exactly the literal body `Продолжаю.`
+- **THEN** no numbered list, no question mark, no synthetic CTA appears in the section
 - **THEN** every autonomous decision appears in `## Решено самостоятельно` instead
-- **THEN** the CTA line is the last line of the report
 
-#### Scenario: Mixed user-only and autonomous decisions
-- **WHEN** the skill's run yields one user-only fork (e.g. "rename capability X to Y — both options are valid, your call?") and several autonomous forks (e.g. "missing line break after section header — added")
-- **THEN** the user-only fork appears in `## Вопросы к пользователю` numbered before the CTA
-- **THEN** the CTA `Продолжаем по флоу? (да / нет)` appears as the final numbered line
-- **THEN** every autonomous fork appears in `## Решено самостоятельно`
-- **THEN** no autonomous fork appears in `## Вопросы к пользователю`
+#### Scenario: One real user-only question
+- **WHEN** the skill's run yields exactly one user-only fork (e.g. "rename capability X to Y — both options are valid, your call?")
+- **THEN** `## Вопросы к пользователю` contains a single numbered question with that fork
+- **THEN** no `Продолжаю.` line is appended (the question itself blocks)
+- **THEN** no synthetic `Продолжаем по флоу?` is appended
 
-#### Scenario: CTA is always the final line
+#### Scenario: Multiple real user-only questions
+- **WHEN** the skill's run yields several user-only forks
+- **THEN** they are rendered as a numbered list in `## Вопросы к пользователю`
+- **THEN** the section contains exactly those questions — nothing else
+- **THEN** every autonomous fork appears in `## Решено самостоятельно`, not here
+
+#### Scenario: Section is never empty and never `_нет_`
 - **WHEN** any of the three skills produces the user-facing report
-- **THEN** the last non-blank line of the report is a call-to-action question
-- **THEN** by default this line is `<N>. Продолжаем по флоу? (да / нет)` where `N` equals `1 + count(user-only-questions)`
-
-#### Scenario: Minimum question count
-- **WHEN** any of the three skills produces the user-facing report
-- **THEN** the number of questions in `## Вопросы к пользователю` is the minimum: exactly one (the CTA) when no user-only forks exist, or `1 + N` where `N` is the count of true user-only forks
-- **THEN** each question is short, focused, and answerable without re-reading the report
-
-#### Scenario: Empty section is forbidden
-- **WHEN** any of the three skills produces the user-facing report
-- **THEN** `## Вопросы к пользователю` is never empty and is never rendered with `_нет_`
-- **THEN** at minimum the default `1. Продолжаем по флоу? (да / нет)` CTA line is present
+- **THEN** `## Вопросы к пользователю` is never empty
+- **THEN** it is never rendered with the body `_нет_`
+- **THEN** the body is either a numbered list of real questions or the literal `Продолжаю.`
 
 ### Requirement: Autonomous decisions block
 
