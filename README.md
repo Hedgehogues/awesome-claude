@@ -17,12 +17,11 @@ Battle-tested conventions that turn Claude into a senior engineer on your team.
 
 ## Install
 
-**For Claude Code:** Run this command:
-```bash
-git clone --depth 1 --branch main https://github.com/Hedgehogues/awesome-claude /tmp/ac && cp -r /tmp/ac/.claude . && rm -rf /tmp/ac
-```
+Open Claude Code and ask:
 
-Or ask Claude: "Install awesome-claude from https://github.com/Hedgehogues/awesome-claude"
+> "Install awesome-claude from https://github.com/Hedgehogues/awesome-claude"
+
+Everything loads automatically.
 
 ---
 
