@@ -4,6 +4,8 @@
 
 **Engineering rules & skills for Claude Code.**
 
+Battle-tested conventions that turn Claude into a senior engineer on your team.
+
 </div>
 
 ---
@@ -19,33 +21,64 @@ Or ask Claude: "Install awesome-claude from https://github.com/Hedgehogues/aweso
 
 ---
 
-## What You Get
+## How It Works
 
-**Rules** — automatically loaded based on file paths
-- DDD, state ownership, testing, git discipline, UI patterns
+```
+You ask Claude → .claude/ detected → Rules loaded (by file path)
+                                   → Skills available (/tdd, /commit, ...)
+                                   → Claude writes code following YOUR conventions
+```
 
-**Skills** — slash commands that run full workflows
-- `/dev:tdd` — TDD cycle
-- `/dev:fix-bug` — debug + fix
-- `/dev:commit` — structured commit
-- `/sdd:propose` — spec-driven change
-- `/sdd:apply` — implement tasks
-- `/report:describe` — one-paragraph summary
-- `/research:triz` — solve contradictions
+---
+
+## Skills
+
+Type `/namespace:skill` to run a full workflow.
+
+**dev:** `/dev:tdd` `/dev:fix-bug` `/dev:commit` `/dev:deploy` `/dev:test-all`
+
+**sdd:** `/sdd:propose` `/sdd:apply` `/sdd:archive` `/sdd:audit`
+
+**report:** `/report:describe`
+
+**research:** `/research:triz`
+
+See [docs/README_DETAILED.md](docs/README_DETAILED.md) for all 16 skills.
+
+---
+
+## Rules
+
+Automatically load based on file paths:
+- **Architecture:** DDD contracts, state ownership, visual cohesion
+- **Workflow:** Git discipline, testing conventions, monorepo structure
+- **Quality:** Security, unit tests, never silently fix broken tests
+
+---
+
+## Philosophy
+
+- **Tests are specs** — no red test, no requirement
+- **Backend owns state** — frontend is stateless projection  
+- **Stop on red** — never silently fix broken tests
+- **DDD layers** — domain → application → infrastructure → presentation
+- **Commits tell a story** — What / Why / Details
 
 ---
 
 ## Customize
 
-Edit `.claude/rules/` for your conventions.
-
 Edit `CLAUDE.md` in your project root to override awesome-claude rules.
+
+Adapt skills to your stack by editing `.claude/skills/dev/deploy.md`, `.claude/skills/dev/test-all.md` after install.
 
 ---
 
 ## Details
 
-See [docs/README_DETAILED.md](docs/README_DETAILED.md) or [CLAUDE_INSTALL.md](CLAUDE_INSTALL.md).
+Full documentation: [docs/README_DETAILED.md](docs/README_DETAILED.md)
+
+Installation guide: [CLAUDE_INSTALL.md](CLAUDE_INSTALL.md)
 
 ---
 
