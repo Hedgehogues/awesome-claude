@@ -77,14 +77,6 @@ Automatically load based on file paths:
 
 ---
 
-## Customize
-
-Edit `CLAUDE.md` in your project root to override awesome-claude rules.
-
-Adapt skills to your stack by editing `.claude/skills/dev/deploy.md`, `.claude/skills/dev/test-all.md` after install.
-
----
-
 ## Details
 
 Full documentation: [docs/README_DETAILED.md](docs/README_DETAILED.md)
