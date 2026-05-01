@@ -112,61 +112,61 @@
 
 **Контекст:** stubs сейчас поддерживают только git/skills/openspec. Скиллы с реальными командами (deploy, build, docker) тестируются только на отказе ("config_missing"). Расширение даёт `files:`, `mock_commands:`, `env:` для полноценного тестирования happy-path таких скиллов.
 
-- [ ] 14.1 Обновить `skills/skill/test-skill.md` шаг 3b: парсить новые поля YAML (`files`, `mock_commands`, `env`); материализовать `files:` в `$TMP/<path>`; создавать shim'ы в `$TMP/.mocks/` (chmod +x); экспортировать env через промпт subagent'а; добавить `PATH=$TMP/.mocks:$PATH` в инструкции subagent
-- [ ] 14.2 Зеркалить `test-skill.md` в `.claude/skills/skill/test-skill.md`
-- [ ] 14.3 Создать stub `skills/skill/stubs/with-deploy-config.md` — пример: `files: { Makefile: ... }` + `mock_commands: { docker: shim }` для тестирования `dev:deploy`
-- [ ] 14.4 Зеркалить stub в `.claude/skills/skill/stubs/`
-- [ ] 14.5 Обновить `skills/skill/cases/dev/deploy.md`: добавить третий кейс `happy-path-with-mocks` со stub `with-deploy-config`, проверяющий что скилл реально вызывает `make deploy` и попадает в shim
-- [ ] 14.6 Зеркалить case в `.claude/skills/skill/cases/dev/`
+- [x] 14.1 Обновить `skills/skill/test-skill.md` шаг 3b: парсить новые поля YAML (`files`, `mock_commands`, `env`); материализовать `files:` в `$TMP/<path>`; создавать shim'ы в `$TMP/.mocks/` (chmod +x); экспортировать env через промпт subagent'а; добавить `PATH=$TMP/.mocks:$PATH` в инструкции subagent
+- [x] 14.2 Зеркалить `test-skill.md` в `.claude/skills/skill/test-skill.md`
+- [x] 14.3 Создать stub `skills/skill/stubs/with-deploy-config.md` — пример: `files: { Makefile: ... }` + `mock_commands: { docker: shim }` для тестирования `dev:deploy`
+- [x] 14.4 Зеркалить stub в `.claude/skills/skill/stubs/`
+- [x] 14.5 Обновить `skills/skill/cases/dev/deploy.md`: добавить третий кейс `happy-path-with-mocks` со stub `with-deploy-config`, проверяющий что скилл реально вызывает `make deploy` и попадает в shim
+- [x] 14.6 Зеркалить case в `.claude/skills/skill/cases/dev/`
 
 ## 15. TDD coverage policy (spec: skill-tdd-coverage-policy)
 
 **Контекст:** кейсы пишутся ad-hoc — happy path есть, негативные сценарии часто пропускаются. Нужна обязательная матрица: positive-happy, positive-corner, negative-missing-input, negative-invalid-input. Применяется при создании/правке скилла.
 
-- [ ] 15.1 Создать правило `rules/skill-tdd-coverage.md`: декларация 4 категорий, requirement минимум 1 кейс на категорию для каждого скилла
-- [ ] 15.2 Зеркалить правило в `.claude/rules/skill-tdd-coverage.md`
-- [ ] 15.3 Скрипт `skills/skill/scripts/check-coverage-matrix.py`: парсит `cases/<ns>/<skill>.md`, ищет category-метки в имени case (например `## Case: positive-happy-...`) или явное `category:` поле; флагает скиллы с покрытием < 4 категорий
-- [ ] 15.4 Зеркалить скрипт в `.claude/skills/skill/scripts/`
-- [ ] 15.5 Обновить `skills/skill/test-all.md`: после прогона всех тестов вызывать `check-coverage-matrix.py`, выводить отчёт по покрытию матрицы
-- [ ] 15.6 Зеркалить `test-all.md` в `.claude/skills/skill/`
+- [x] 15.1 Создать правило `rules/skill-tdd-coverage.md`: декларация 4 категорий, requirement минимум 1 кейс на категорию для каждого скилла
+- [x] 15.2 Зеркалить правило в `.claude/rules/skill-tdd-coverage.md`
+- [x] 15.3 Скрипт `skills/skill/scripts/check-coverage-matrix.py`: парсит `cases/<ns>/<skill>.md`, ищет category-метки в имени case (например `## Case: positive-happy-...`) или явное `category:` поле; флагает скиллы с покрытием < 4 категорий
+- [x] 15.4 Зеркалить скрипт в `.claude/skills/skill/scripts/`
+- [x] 15.5 Обновить `skills/skill/test-all.md`: после прогона всех тестов вызывать `check-coverage-matrix.py`, выводить отчёт по покрытию матрицы
+- [x] 15.6 Зеркалить `test-all.md` в `.claude/skills/skill/`
 - [ ] 15.7 Обновить `skills/sdd/propose.md` (+зеркало): когда `proposal.md` декларирует новый скилл — автогенерировать `cases/<ns>/<skill>.md` со stub-кейсами по 4 категориям
 
 ## 16. Test execution lifecycle (spec: test-execution-lifecycle)
 
 **Контекст:** `skill:test-skill` сейчас делает `mktemp -d` без `trap EXIT` → мусор накапливается в `/tmp`. Status-файла нет → при крахе прогона теряется контекст. Применяем канонический паттерн проекта (`skills/sdd/scripts/bump-namespace.sh:31-32`): один root tmp-dir на весь run + `trap EXIT` для авто-cleanup. Status-файл — внутри RUN_ROOT (не глобально), уникален per-run, удаляется вместе с прогоном.
 
-- [ ] 16.1 Обновить `skills/skill/test-skill.md` шаг 3b: вынести `mktemp -d` в `RUN_ROOT=$(mktemp -d -t skill-test-XXXXXX)` на верхний уровень, до цикла кейсов; добавить `trap "rm -rf '$RUN_ROOT'" EXIT`; per-case tmp = `$RUN_ROOT/case-<N>/`
-- [ ] 16.2 Status-файл `$RUN_ROOT/status.json`: создаётся перед первым кейсом, обновляется после каждого (case name, verdict, tmp_path); удаляется автоматически вместе с RUN_ROOT через trap
-- [ ] 16.3 Опция `--keep-tmp` (значения: `none` (default), `failed-only`, `all`): при `failed-only` — перед exit копировать только failed case-dirs в стабильный путь `~/.cache/skill-test/<run-id>/` и печатать его в отчёте; при `all` — отменять trap, печатать `$RUN_ROOT`; при `none` — стандартный полный cleanup
-- [ ] 16.4 Обновить `skills/skill/test-all.md` аналогично: один RUN_ROOT на всё `test-all`, status объединённый
-- [ ] 16.5 Финальный отчёт `skill:test-skill` SHALL печатать: `Run root: $RUN_ROOT (cleaned up)` или `Run root: <preserved-path>` при `--keep-tmp`
-- [ ] 16.6 Зеркалить обновлённые `test-skill.md` и `test-all.md` в `.claude/skills/skill/`
-- [ ] 16.7 Кейс в `skills/skill/cases/skill/test-skill.md` (если такой файл есть) или новая capability test: проверить что после прогона `$RUN_ROOT` отсутствует на диске
+- [x] 16.1 Обновить `skills/skill/test-skill.md` шаг 3b: вынести `mktemp -d` в `RUN_ROOT=$(mktemp -d -t skill-test-XXXXXX)` на верхний уровень, до цикла кейсов; добавить `trap "rm -rf '$RUN_ROOT'" EXIT`; per-case tmp = `$RUN_ROOT/case-<N>/`
+- [x] 16.2 Status-файл `$RUN_ROOT/status.json`: создаётся перед первым кейсом, обновляется после каждого (case name, verdict, tmp_path); удаляется автоматически вместе с RUN_ROOT через trap
+- [x] 16.3 Опция `--keep-tmp` (значения: `none` (default), `failed-only`, `all`): при `failed-only` — перед exit копировать только failed case-dirs в стабильный путь `~/.cache/skill-test/<run-id>/` и печатать его в отчёте; при `all` — отменять trap, печатать `$RUN_ROOT`; при `none` — стандартный полный cleanup
+- [x] 16.4 Обновить `skills/skill/test-all.md` аналогично: один RUN_ROOT на всё `test-all`, status объединённый
+- [x] 16.5 Финальный отчёт `skill:test-skill` SHALL печатать: `Run root: $RUN_ROOT (cleaned up)` или `Run root: <preserved-path>` при `--keep-tmp`
+- [x] 16.6 Зеркалить обновлённые `test-skill.md` и `test-all.md` в `.claude/skills/skill/`
+- [x] 16.7 Кейс в `skills/skill/cases/skill/test-skill.md` (если такой файл есть) или новая capability test: проверить что после прогона `$RUN_ROOT` отсутствует на диске
 
 ## 17. Documentation refactor & installation (capability: docs-refactor-installation)
 
 **Контекст:** старый README.md — 465 строк, слишком детальный для first-time пользователя. Инструкции для Claude не явны. Нужна разделение: минималистичный README для людей, явный CLAUDE_INSTALL.md для Claude, детали в docs/.
 
-- [ ] 17.1 Переместить старый README.md → `docs/README_DETAILED.md` (уже done)
-- [ ] 17.2 Создать новый минималистичный `README.md` (70 строк): что это, как установить, список скиллов по неймспейсам с одной строкой каждый (уже done)
-- [ ] 17.3 Создать `CLAUDE_INSTALL.md`: явная инструкция для Claude как устанавливать awesome-claude и что делать после (уже done)
-- [ ] 17.4 Обновить `.claude/CLAUDE.md`: инструкции для Claude как использовать awesome-claude после установки (скилл, rules, как работает)
-- [ ] 17.5 Обновить `docs/README_DETAILED.md`: добавить ссылку на CLAUDE_INSTALL.md в начало ("For installation instructions, see CLAUDE_INSTALL.md")
-- [ ] 17.6 Зеркалить CLAUDE_INSTALL.md в `.claude/` если требуется (проверить нужно ли)
+- [x] 17.1 Переместить старый README.md → `docs/README_DETAILED.md` (уже done)
+- [x] 17.2 Создать новый минималистичный `README.md` (70 строк): что это, как установить, список скиллов по неймспейсам с одной строкой каждый (уже done)
+- [x] 17.3 Создать `CLAUDE_INSTALL.md`: явная инструкция для Claude как устанавливать awesome-claude и что делать после (уже done)
+- [x] 17.4 Обновить `.claude/CLAUDE.md`: инструкции для Claude как использовать awesome-claude после установки (скилл, rules, как работает)
+- [x] 17.5 Обновить `docs/README_DETAILED.md`: добавить ссылку на CLAUDE_INSTALL.md в начало ("For installation instructions, see CLAUDE_INSTALL.md")
+- [x] 17.6 Зеркалить CLAUDE_INSTALL.md в `.claude/` если требуется (проверить нужно ли)
 
 ## 18. Skills folder reorganization (spec: skills-folder-reorganization)
 
 **Контекст:** скиллы лежат плоско в `skills/dev/`, `skills/sdd/` и т.д. Скрипты и cases разбросаны. При добавлении новых скриптов/cases сложно ориентироваться. Нужна иерархия: каждый скилл в своей папке.
 
-- [ ] 18.1 Переместить все скиллы dev namespace: `skills/dev/<skill>/skill.md` (9 скиллов: tdd, fix-bug, tracing, fix-tests, dead-features, init-repo, commit, deploy, test-all)
-- [ ] 18.2 Переместить скрипты dev: `skills/dev/<skill>/scripts/` если есть
-- [ ] 18.3 Переместить cases dev: `skills/skill/cases/dev/` → `skills/dev/<skill>/cases/` (или оставить в skills/skill/cases/)
-- [ ] 18.4 Переместить все скиллы sdd namespace: `skills/sdd/<skill>/skill.md` (11 скиллов: propose, apply, archive, audit, change-verify, contradiction, explore, help, repo, spec-verify, sync)
-- [ ] 18.5 Переместить скрипты sdd: contradiction.py, check-design.py, test-plan-to-cases.py → `skills/sdd/<skill>/scripts/`
-- [ ] 18.6 Переместить cases sdd: `skills/skill/cases/sdd/` → `skills/sdd/<skill>/cases/`
-- [ ] 18.7 Переместить все скиллы report namespace: `skills/report/<skill>/skill.md` (2 скилла: describe, session-report)
-- [ ] 18.8 Переместить все скиллы research namespace: `skills/research/<skill>/skill.md` (1 скилл: triz)
-- [ ] 18.9 Переместить skill-тестирующие скиллы: `skills/skill/<skill>/skill.md` (2 скилла: test-skill, test-all)
-- [ ] 18.10 Обновить paths в .claude/commands/ если требуется (точки входа могут остаться неизменными)
-- [ ] 18.11 Зеркалить всю структуру в `.claude/skills/` (все папки и скрипты)
-- [ ] 18.12 Обновить все ссылки в documentation и другие места где упоминаются пути к скиллам
+- [x] 18.1 Переместить все скиллы dev namespace: `skills/dev/<skill>/skill.md` (9 скиллов: tdd, fix-bug, tracing, fix-tests, dead-features, init-repo, commit, deploy, test-all)
+- [x] 18.2 Переместить скрипты dev: `skills/dev/<skill>/scripts/` если есть
+- [x] 18.3 Переместить cases dev: `skills/skill/cases/dev/` → `skills/dev/<skill>/cases/` (или оставить в skills/skill/cases/)
+- [x] 18.4 Переместить все скиллы sdd namespace: `skills/sdd/<skill>/skill.md` (11 скиллов: propose, apply, archive, audit, change-verify, contradiction, explore, help, repo, spec-verify, sync)
+- [x] 18.5 Переместить скрипты sdd: contradiction.py, check-design.py, test-plan-to-cases.py → `skills/sdd/<skill>/scripts/`
+- [x] 18.6 Переместить cases sdd: `skills/skill/cases/sdd/` → `skills/sdd/<skill>/cases/`
+- [x] 18.7 Переместить все скиллы report namespace: `skills/report/<skill>/skill.md` (2 скилла: describe, session-report)
+- [x] 18.8 Переместить все скиллы research namespace: `skills/research/<skill>/skill.md` (1 скилл: triz)
+- [x] 18.9 Переместить skill-тестирующие скиллы: `skills/skill/<skill>/skill.md` (2 скилла: test-skill, test-all)
+- [x] 18.10 Обновить paths в .claude/commands/ если требуется (точки входа могут остаться неизменными)
+- [x] 18.11 Зеркалить всю структуру в `.claude/skills/` (все папки и скрипты)
+- [x] 18.12 Обновить все ссылки в documentation и другие места где упоминаются пути к скиллам
