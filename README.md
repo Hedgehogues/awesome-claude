@@ -88,7 +88,7 @@ Adapt skills to your stack by editing `.claude/skills/dev/deploy.md`, `.claude/s
 
 Full documentation: [docs/README_DETAILED.md](docs/README_DETAILED.md)
 
-Installation guide: [CLAUDE_INSTALL.md](CLAUDE_INSTALL.md)
+Installation guide (for Claude): [CLAUDE_INSTALL.md](CLAUDE_INSTALL.md)
 
 ---
 
