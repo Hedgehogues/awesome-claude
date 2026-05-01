@@ -46,6 +46,7 @@ You ask Claude → .claude/ detected → Rules loaded (by file path)
 
 **Manage changes:**
 - `/sdd:propose` — Design + specs + tasks in one step
+- `/sdd:contradiction` — Check design for contradictions
 - `/sdd:apply` — Implement checklist
 - `/sdd:archive` — Archive and verify
 
