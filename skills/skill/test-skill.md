@@ -39,7 +39,10 @@ allowed-tools: Bash, Read, Agent
 #### 3b. Материализуй стаб
 
 ```bash
-TMP=$(mktemp -d)
+RUN_ROOT=$(mktemp -d -t skill-test-XXXXXX)
+trap "rm -rf '$RUN_ROOT'" EXIT
+TMP="$RUN_ROOT/case-<N>"
+mkdir -p "$TMP"
 cd "$TMP"
 git init --quiet
 git config user.email "test@test.local"
@@ -59,6 +62,26 @@ cp "skills/$NS/<skill>.md" "$TMP/.claude/skills/$NS/"
 ```
 Также скопируй `skills/$NS/.manifest`.
 
+**Новое: Mock-stubs расширение**
+
+Если в стабе есть `files:`:
+```bash
+for path in <files.keys>; do
+  mkdir -p "$(dirname "$TMP/$path")"
+  echo '<files[path]>' > "$TMP/$path"
+done
+```
+
+Если в стабе есть `mock_commands:`:
+```bash
+mkdir -p "$TMP/.mocks"
+for cmd in <mock_commands.keys>; do
+  echo '#!/bin/bash' > "$TMP/.mocks/$cmd"
+  echo '<mock_commands[cmd]>' >> "$TMP/.mocks/$cmd"
+  chmod +x "$TMP/.mocks/$cmd"
+done
+```
+
 Если в стабе есть `openspec.changes`:
 ```bash
 for change in <openspec.changes>; do
@@ -70,10 +93,19 @@ done
 
 Прочитай `skills/$NS/$SKILL.md`. Удали frontmatter (`---…---`).
 
+**Если есть mock_commands или env**, подготовь окружение:
+
+```
+PATH=$TMP/.mocks:$PATH
+<для каждого env ключа>: EXPORT <KEY>=<VALUE>
+```
+
 Запусти Agent с промптом:
 ```
 Working directory for this test: <TMP>
 Before every bash command run: cd <TMP>
+Environment: PATH=$TMP/.mocks:$PATH [если есть mocks]
+[env переменные]
 
 <тело скилла без frontmatter>
 ```
