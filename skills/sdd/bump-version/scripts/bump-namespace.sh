@@ -1,42 +1,45 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-NAMESPACE="${1:?Usage: bump-namespace.sh <namespace>}"
+NAMESPACE="${1:?Usage: bump-namespace.sh <namespace> [<ref>]}"
+REF="${2:-}"
 REPO="git@github.com:Hedgehogues/awesome-claude.git"
 CLAUDE_DIR="${CLAUDE_DIR:-$(pwd)/.claude}"
 VERSIONS_FILE="$CLAUDE_DIR/.versions"
 
-# Resolve latest tag from remote
-echo "Fetching latest version for namespace '$NAMESPACE'..."
-LATEST_TAG=$(git ls-remote --tags --sort=-v:refname "$REPO" \
-  | grep -oE 'refs/tags/[^{}]+$' \
-  | head -1 \
-  | sed 's|refs/tags/||')
-
-if [ -z "$LATEST_TAG" ]; then
-  echo "ERROR: could not resolve latest tag from $REPO" >&2
-  exit 1
+if [ -n "$REF" ]; then
+  TARGET="$REF"
+  echo "Using explicit ref: $TARGET"
+else
+  echo "Fetching latest tag for namespace '$NAMESPACE'..."
+  TARGET=$(git ls-remote --tags --sort=-v:refname "$REPO" \
+    | grep -oE 'refs/tags/[^{}]+$' \
+    | head -1 \
+    | sed 's|refs/tags/||')
+  if [ -z "$TARGET" ]; then
+    echo "ERROR: could not resolve latest tag from $REPO" >&2
+    exit 1
+  fi
+  echo "Latest tag: $TARGET"
 fi
-
-echo "Latest tag: $LATEST_TAG"
 
 # Check currently installed version
 INSTALLED=$(grep "^${NAMESPACE}=" "$VERSIONS_FILE" 2>/dev/null | cut -d= -f2 || echo "")
-if [ "$INSTALLED" = "$LATEST_TAG" ]; then
-  echo "$NAMESPACE is already at $LATEST_TAG — nothing to do."
+if [ "$INSTALLED" = "$TARGET" ] && [ -z "$REF" ]; then
+  echo "$NAMESPACE is already at $TARGET — nothing to do."
   exit 0
 fi
 
-# Clone to temp
+# Clone to temp (works for both tags and branches with -b)
 TMPDIR=$(mktemp -d)
 trap "rm -rf '$TMPDIR'" EXIT
 
-git clone --depth 1 -b "$LATEST_TAG" "$REPO" "$TMPDIR/ac" --quiet
+git clone --depth 1 -b "$TARGET" "$REPO" "$TMPDIR/ac" --quiet
 
 # Validate namespace exists
 MANIFEST="$TMPDIR/ac/skills/$NAMESPACE/.manifest"
 if [ ! -f "$MANIFEST" ]; then
-  echo "ERROR: namespace '$NAMESPACE' not found in awesome-claude@$LATEST_TAG" >&2
+  echo "ERROR: namespace '$NAMESPACE' not found in awesome-claude@$TARGET" >&2
   exit 1
 fi
 
@@ -56,20 +59,20 @@ cp -r "$TMPDIR/ac/skills/$NAMESPACE" "$CLAUDE_DIR/skills/"
 # Write version
 touch "$VERSIONS_FILE"
 if grep -q "^${NAMESPACE}=" "$VERSIONS_FILE" 2>/dev/null; then
-  sed -i '' "s|^${NAMESPACE}=.*|${NAMESPACE}=${LATEST_TAG}|" "$VERSIONS_FILE"
+  sed -i '' "s|^${NAMESPACE}=.*|${NAMESPACE}=${TARGET}|" "$VERSIONS_FILE"
 else
-  echo "${NAMESPACE}=${LATEST_TAG}" >> "$VERSIONS_FILE"
+  echo "${NAMESPACE}=${TARGET}" >> "$VERSIONS_FILE"
 fi
 
-echo "Updated $NAMESPACE → $LATEST_TAG"
+echo "Updated $NAMESPACE → $TARGET"
 
-# Handle dependencies
+# Handle dependencies (propagate same ref if explicit)
 for DEP in $DEPS; do
   DEP_INSTALLED=$(grep "^${DEP}=" "$VERSIONS_FILE" 2>/dev/null | cut -d= -f2 || echo "")
-  if [ "$DEP_INSTALLED" != "$LATEST_TAG" ]; then
-    echo "Dependency '$DEP' is at '$DEP_INSTALLED', updating..."
-    CLAUDE_DIR="$CLAUDE_DIR" bash "$0" "$DEP"
+  if [ "$DEP_INSTALLED" != "$TARGET" ]; then
+    echo "Dependency '$DEP' is at '$DEP_INSTALLED', updating to $TARGET..."
+    CLAUDE_DIR="$CLAUDE_DIR" bash "$0" "$DEP" "$REF"
   else
-    echo "Dependency '$DEP' already at $LATEST_TAG — ok."
+    echo "Dependency '$DEP' already at $TARGET — ok."
   fi
 done

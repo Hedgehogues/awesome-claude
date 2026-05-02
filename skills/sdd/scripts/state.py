@@ -39,15 +39,15 @@ VALID_STAGES = {
 ALLOWED_TRANSITIONS = {
     "unknown": VALID_STAGES,
     "proposed": {"contradiction-ok", "contradiction-failed"},
-    "contradiction-ok": {"applying", "contradiction-failed"},
+    "contradiction-ok": {"applying", "contradiction-failed", "proposed"},
     "contradiction-failed": {"proposed", "contradiction-ok", "contradiction-failed"},
     "applying": {"verifying", "verify-failed"},
     "verifying": {"verify-ok", "verify-failed"},
-    "verify-ok": {"archiving"},
+    "verify-ok": {"archiving", "verifying", "applying"},
     "verify-failed": {"applying", "verifying"},
     "archiving": {"archived", "archive-failed"},
     "archived": set(),
-    "archive-failed": {"archiving", "archived"},
+    "archive-failed": {"archiving", "archived", "verify-ok"},
 }
 
 

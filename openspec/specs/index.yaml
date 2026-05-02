@@ -145,3 +145,114 @@ specs:
     sdd:archive with canonical block order
   path: structured-apply-output/spec.md
   test_plan: structured-apply-output/test-plan.md
+- capability: sdd-apply
+  description: /sdd:apply со встроенной L1/L2/L3 верификацией по tasks.md, обновлением
+    .sdd-state.yaml на каждом подшаге, conditional update openspec/specs/index.yaml
+    для новых capabilities (только при verify-ok).
+  path: sdd-apply/spec.md
+  test_plan: sdd-apply/test-plan.md
+- capability: sdd-archive
+  description: /sdd:archive со встроенной L1/L2/L3 spec-верификацией live spec'ов
+    (с REMOVED-инверсией), red-banner при verify-fail после merge specs, удаление
+    .sdd-state.yaml финальным шагом.
+  path: sdd-archive/spec.md
+  test_plan: sdd-archive/test-plan.md
+- capability: sdd-state
+  description: 'Lifecycle .sdd-state.yaml: формат, переходы стадий (proposed→contradiction-*→applying→verifying→verify-*→archiving→archived|archive-failed),
+    gitignore, удаление при success, persistence при failure, at-first-touch.'
+  path: sdd-state/spec.md
+  test_plan: sdd-state/test-plan.md
+- capability: sdd-ownership
+  description: 'Поле owner: в .sdd.yaml, identity-resolution через claude auth status
+    с fallback на git config user.email, warning при несовпадении и opt-in перезапись
+    через AskUserQuestion.'
+  path: sdd-ownership/spec.md
+  test_plan: sdd-ownership/test-plan.md
+- capability: sdd-propose-merge-dialog
+  description: 'Проверка пересечений creates: с openspec/specs/index.yaml в /sdd:propose
+    и интерактивный выбор переключения на merges-into: через AskUserQuestion (read-only
+    на index.yaml).'
+  path: sdd-propose-merge-dialog/spec.md
+  test_plan: sdd-propose-merge-dialog/test-plan.md
+- capability: dev-mode
+  description: 'Dev mode setup через симлинки skills/, commands/, rules/ -> .claude/.
+    Изменения в исходниках сразу видны Claude Code без ручного копирования. Bootstrap-сценарий:
+    при свежем клоне Claude читает skills/skill/setup/skill.md напрямую.
+
+    '
+  path: dev-mode/spec.md
+  test_plan: dev-mode/test-plan.md
+- capability: install-modes
+  description: 'Два режима работы awesome-claude (dev mode для контрибьютора, user
+    mode для пользователя проекта) без публичных CLI-команд - Claude выполняет setup
+    сам: dev -> симлинки через skill:setup; user -> git clone + cp напрямую.
+
+    '
+  path: install-modes/spec.md
+  test_plan: install-modes/test-plan.md
+- capability: dev-setup-skill
+  description: '/skill:setup - создаёт симлинки skills/, commands/, rules/ -> .claude/
+    напрямую через bash, без делегирования к внешнему скрипту. Идемпотентен; при существующей
+    реальной директории просит подтверждение.
+
+    '
+  path: dev-setup-skill/spec.md
+  test_plan: dev-setup-skill/test-plan.md
+- capability: manifest
+  description: 'manifest.yaml в корне репы - единый источник правды: version (репы),
+    tools (CLI-инструменты, openspec и др.), repos (субмодули). sdd:repo управляет
+    repos:, skill:deps читает оба раздела. Schema с тремя обязательными top-level
+    ключами.
+
+    '
+  path: manifest/spec.md
+  test_plan: manifest/test-plan.md
+- capability: deps-skill
+  description: '/skill:deps - единая точка оркестрации зависимостей; читает manifest.yaml,
+    устанавливает tools, вызывает sdd:sync для repos. Read-only по manifest.yaml -
+    никогда не пишет в него.
+
+    '
+  path: deps-skill/spec.md
+  test_plan: deps-skill/test-plan.md
+- capability: contributor-workflow
+  description: '/skill:onboarding - guided entry point для контрибьютора awesome-claude.
+    Показывает полный contributor workflow и текущий следующий шаг по состоянию репы.
+    НЕ запускает другие скиллы автоматически.
+
+    '
+  path: contributor-workflow/spec.md
+  test_plan: contributor-workflow/test-plan.md
+- capability: claude-init-mode
+  description: 'README раздел ## Init - инструкция Клоду для распознавания режима
+    по составу директории (skills/, commands/, manifest.yaml -> dev mode; иначе ->
+    user mode), описания обоих в 1-2 предложениях и выполнения setup без ручных команд.
+
+    '
+  path: claude-init-mode/spec.md
+  test_plan: claude-init-mode/test-plan.md
+- capability: sdd-test-coverage
+  description: 'Test-spec файлы skills/sdd/<skill>/cases/<skill>.md для всех sdd-скиллов
+    (apply, archive, audit, bump-version, contradiction, explore, help, propose, repo,
+    sync) - единая структура рядом со скиллом, 4 категории покрытия по rules/skill-tdd-coverage.md.
+
+    '
+  path: sdd-test-coverage/spec.md
+  test_plan: sdd-test-coverage/test-plan.md
+- capability: skill-eval-framework
+  description: 'Eval-механика для skill:test-skill: assertions двух типов (contains
+    - детерминированные, semantic - LLM-judge), bootstrap k=5 (>=4/5 для PASS), прогресс
+    в реальном времени, файл результатов test-results/YYYY-MM-DD-HHMMSS.md создаётся
+    в начале и appendится по мере выполнения.
+
+    '
+  path: skill-eval-framework/spec.md
+  test_plan: skill-eval-framework/test-plan.md
+- capability: skill-release
+  description: '/skill:release - финальный шаг контрибьюторского workflow: bump-version
+    в manifest.yaml, git-коммит, version tag. Останавливается если working tree не
+    чистый. Не пушит в remote автоматически.
+
+    '
+  path: skill-release/spec.md
+  test_plan: skill-release/test-plan.md

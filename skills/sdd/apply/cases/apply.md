@@ -107,3 +107,33 @@ semantic:
       does NOT contain the headings "## Технические статусы", "## Описание",
       or "## Вопросы к пользователю"
   - prose_only: intermediate responses are 2–3 sentences of plain prose
+
+## Case: identity-mismatch-warning
+stub: change-other-owner
+contains:
+  - "owner"
+semantic:
+  - warning_emitted: skill detects current identity differs from .sdd.yaml owner and emits warning containing both emails
+  - opt_in_required: skill invokes AskUserQuestion before overwriting owner; does not overwrite silently
+  - no_silent_proceed: skill does not proceed to applying stage without explicit user consent
+
+## Case: resume-from-verifying
+stub: change-verifying-state
+semantic:
+  - state_read_first: skill reads .sdd-state.yaml before any other action and observes stage=verifying
+  - no_reimplement: skill does not re-execute openspec-apply-change for tasks already marked [x]
+  - resume_at_verify: skill continues from inline L1/L2/L3 verify, not from start
+
+## Case: verify-failed-no-index-update
+stub: change-verify-failed
+semantic:
+  - state_verify_failed: skill detects existing .sdd-state.yaml stage=verify-failed
+  - index_not_updated: openspec/specs/index.yaml is NOT modified when stage=verify-failed
+  - workflow_halted: skill stops with verify-failed verdict and instructs user to fix and re-run /sdd:apply
+
+## Case: keep-in-sync-marker-present
+stub: change-with-sdd-yaml
+semantic:
+  - marker_in_apply: skills/sdd/apply/skill.md verify section contains literal comment "<!-- KEEP IN SYNC: skills/sdd/archive/skill.md verify section -->"
+  - marker_in_archive: skills/sdd/archive/skill.md verify section contains literal comment "<!-- KEEP IN SYNC: skills/sdd/apply/skill.md verify section -->"
+  - intentional_duplication: marker documents that L1/L2/L3 verifier text is intentionally copied between apply and archive (per design D2)

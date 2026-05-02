@@ -85,3 +85,24 @@ semantic:
       in "## Описание" or "## Решено самостоятельно"
   - jargon_allowed_in_tech: detector jargon MAY appear inside "## Технические статусы"
       because the detailed report is embedded verbatim there
+
+## Case: state-transition-on-no-issues
+stub: change-with-sdd-yaml
+semantic:
+  - transition_to_ok: when contradiction detector run produces 0 hard issues, .sdd-state.yaml stage transitions to contradiction-ok
+  - state_file_updated: .sdd-state.yaml last_step_at is updated with current ISO timestamp
+
+## Case: state-transition-on-hard-issues
+stub: change-with-sdd-yaml
+semantic:
+  - transition_to_failed: when contradiction detector run produces ≥1 hard issue (numeric/reference/deontic/semantic), .sdd-state.yaml stage transitions to contradiction-failed
+  - report_still_rendered: even on contradiction-failed, the full 7-block report is rendered first; transition is the LAST action
+
+## Case: identity-warn-other-owner
+stub: change-other-owner
+contains:
+  - "owner"
+semantic:
+  - identity_check_at_start: skill calls identity.py before running detectors
+  - warning_when_mismatch: when current email differs from .sdd.yaml owner, skill emits warning naming both emails
+  - opt_in_overwrite: skill invokes AskUserQuestion before overwriting owner; does not silently proceed

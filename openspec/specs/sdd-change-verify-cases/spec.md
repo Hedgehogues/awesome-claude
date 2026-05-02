@@ -2,19 +2,19 @@
 Test cases for sdd:change-verify covering all-done, missing artifact, and human-needed scenarios.
 ## Requirements
 ### Requirement: cases/sdd/change-verify.md exists with at least three cases
-`skills/skill/cases/sdd/change-verify.md` SHALL exist with cases covering: all tasks done (passed verdict), missing artifact (gaps_found verdict), and human_needed task.
 
-#### Scenario: all tasks done → passed
-- **WHEN** `skill:test-skill sdd:change-verify` runs with stub `change-with-sdd-yaml` where all tasks are checked
-- **THEN** output contains "verdict: passed"
-- **THEN** output contains summary with "missing: 0"
+**DEPRECATED in this change.** Скилл `/sdd:change-verify` SHALL быть удалён в `merge-verify-into-apply-archive` — его L1/L2/L3 verify-логика инлайнится в `/sdd:apply` как обязательный шаг после реализации.
 
-#### Scenario: missing artifact → gaps_found
-- **WHEN** stub has an unchecked task referencing a file that does not exist
-- **THEN** output contains "verdict: gaps_found"
-- **THEN** output contains the missing artifact path
+Capability `sdd-change-verify-cases` SHALL считаться устаревшей. Файл `skills/skill/cases/sdd/change-verify.md` MUST отсутствовать. Сценарии (passed / gaps_found / human_needed) SHALL переехать в capability `sdd-apply-cases` как ADDED Requirement.
 
-#### Scenario: human_needed task
-- **WHEN** stub has a task requiring live skill invocation
-- **THEN** output contains "human_needed" with a concrete verification step
+#### Scenario: capability deprecated, file absent
+
+- **WHEN** developer ищет тест-кейсы для verify-логики
+- **THEN** файл `skills/skill/cases/sdd/change-verify.md` отсутствует
+- **THEN** соответствующие сценарии находятся в `skills/skill/cases/sdd/apply.md` (Requirement из `sdd-apply-cases`)
+
+#### Scenario: capability not used in new changes
+
+- **WHEN** автор нового change рассматривает добавление в `sdd-change-verify-cases`
+- **THEN** вместо этого добавляет в `sdd-apply-cases`; capability `sdd-change-verify-cases` deprecated
 

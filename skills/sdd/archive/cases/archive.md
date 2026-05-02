@@ -81,3 +81,42 @@ semantic:
       or "## Решено самостоятельно"
   - no_ssot: the string "SSOT" does not appear in "## Описание"
       or "## Решено самостоятельно"
+
+## Case: removed-req-file-gone-pass
+stub: change-with-removed-req-no-file
+semantic:
+  - inverted_l1_pass: spec contains "## REMOVED Requirements" referencing skills/sdd/legacy/skill.md, file is absent on disk → verdict for that Requirement is `done`
+  - no_l2_l3_for_removed: L2 and L3 are marked N/A for REMOVED Requirements
+  - archive_completes: skill completes archive flow without red-banner
+
+## Case: removed-req-file-remains-fail
+stub: change-with-removed-req-file-present
+semantic:
+  - inverted_l1_fail: spec contains "## REMOVED Requirements" but referenced file still exists on disk → verdict is `missing`
+  - note_removal_not_performed: verifier output includes note "removal not performed"
+  - red_banner_emitted: archive halts with red-banner when REMOVED-inversion fails
+
+## Case: verify-fail-red-banner
+stub: change-verify-failed
+contains:
+  - "SPECS MODIFIED"
+  - "git restore openspec/specs/"
+semantic:
+  - banner_exact_text: output contains all three banner lines verbatim
+  - state_archive_failed: .sdd-state.yaml stage transitions to archive-failed
+  - no_auto_rollback: openspec/specs/ files are NOT reverted by the skill
+  - state_file_preserved: .sdd-state.yaml is NOT deleted on archive-fail
+
+## Case: state-deleted-on-success
+stub: change-with-sdd-yaml
+semantic:
+  - delete_is_last_step: state.py delete is the FINAL step of archive, after merge specs and copy operations
+  - no_state_after_success: .sdd-state.yaml does not exist after successful archive
+  - delete_only_on_archived: delete is invoked only when state transitions to archived, never on intermediate stages
+
+## Case: state-preserved-on-archive-fail
+stub: change-verify-failed
+semantic:
+  - state_remains: .sdd-state.yaml file still exists after archive-fail
+  - state_shows_failed_stage: state-file content has stage=archive-failed for resume capability
+  - no_silent_cleanup: skill does not delete state-file at any failure path
