@@ -105,3 +105,79 @@ specs:
   description: Тест-кейсы для четырёх bump-version скиллов (по 2 кейса каждый) в skills/skill/cases/{sdd,dev,report,research}/bump-version.md.
   path: bump-version-cases/spec.md
   test_plan: bump-version-cases/test-plan.md
+- capability: sdd-apply-cases
+  description: Кейсы для sdd:apply — чтение test-plan.md как контекста, обновление index.yaml, генерация test cases.
+  path: sdd-apply-cases/spec.md
+  test_plan: sdd-apply-cases/test-plan.md
+- capability: sdd-archive-cases
+  description: Кейсы для sdd:archive — блокировка при отсутствии test-plan.md, архивирование без копирования test-plan в specs/, обновление index.yaml.
+  path: sdd-archive-cases/spec.md
+  test_plan: sdd-archive-cases/test-plan.md
+- capability: sdd-change-verify-cases
+  description: Кейсы для sdd:change-verify — L1/L2/L3 проверки, human_needed.
+  path: sdd-change-verify-cases/spec.md
+  test_plan: sdd-change-verify-cases/test-plan.md
+- capability: sdd-remaining-cases
+  description: Кейсы для оставшихся sdd-скиллов (audit, explore, repo, spec-verify, sync).
+  path: sdd-remaining-cases/spec.md
+  test_plan: sdd-remaining-cases/test-plan.md
+- capability: dev-namespace-cases
+  description: Кейсы для всех dev:* скиллов (commit, dead-features, deploy, fix-bug, fix-tests, init-repo, tdd, test-all, tracing).
+  path: dev-namespace-cases/spec.md
+  test_plan: dev-namespace-cases/test-plan.md
+- capability: report-namespace-cases
+  description: Кейсы для report:* скиллов (describe, session-report).
+  path: report-namespace-cases/spec.md
+  test_plan: report-namespace-cases/test-plan.md
+- capability: research-namespace-cases
+  description: Кейсы для research:* скиллов (triz).
+  path: research-namespace-cases/spec.md
+  test_plan: research-namespace-cases/test-plan.md
+- capability: orphan-stubs-wired
+  description: Существующие осиротевшие стабы подключены к конкретным кейсам.
+  path: orphan-stubs-wired/spec.md
+  test_plan: orphan-stubs-wired/test-plan.md
+- capability: skill-namespace-rename
+  description: Переименование __dev → skill во всех трёх локациях (skills/, commands/, .claude/skills/). Скиллы переименованы в skill:test-skill и skill:test-all.
+  path: skill-namespace-rename/spec.md
+  test_plan: skill-namespace-rename/test-plan.md
+- capability: auto-fill-creates
+  description: sdd:propose автоматически заполняет creates в .sdd.yaml из ### New Capabilities в proposal.md.
+  path: auto-fill-creates/spec.md
+  test_plan: auto-fill-creates/test-plan.md
+- capability: contradiction-script-location
+  description: contradiction.py перемещён в skills/sdd/scripts/ в соответствии с конвенцией расположения скриптов.
+  path: contradiction-script-location/spec.md
+  test_plan: contradiction-script-location/test-plan.md
+- capability: test-plan-to-semantic-cases
+  description: Скрипт test-plan-to-cases.py генерирует semantic test cases из acceptance_criteria в test-plan.md.
+  path: test-plan-to-semantic-cases/spec.md
+  test_plan: test-plan-to-semantic-cases/test-plan.md
+- capability: claude-way-install-removed
+  description: scripts/install.sh удалён; установка выполняется только через Claude Code.
+  path: claude-way-install-removed/spec.md
+  test_plan: claude-way-install-removed/test-plan.md
+- capability: bump-version-cases
+  description: Тест-кейсы для четырёх bump-version скиллов (по 2 кейса каждый).
+  path: bump-version-cases/spec.md
+  test_plan: bump-version-cases/test-plan.md
+- capability: mock-stubs-extended
+  description: Расширение формата stubs полями files, mock_commands, env для тестирования на моковых данных.
+  path: mock-stubs-extended/spec.md
+  test_plan: mock-stubs-extended/test-plan.md
+- capability: skill-tdd-coverage-policy
+  description: Обязательная матрица из 4 категорий кейсов на каждый скилл (positive-happy, positive-corner, negative-missing-input, negative-invalid-input).
+  path: skill-tdd-coverage-policy/spec.md
+  test_plan: skill-tdd-coverage-policy/test-plan.md
+- capability: test-execution-lifecycle
+  description: Единый RUN_ROOT + trap EXIT для авто-cleanup; status.json для отчётности; флаг --keep-tmp для отладки.
+  path: test-execution-lifecycle/spec.md
+  test_plan: test-execution-lifecycle/test-plan.md
+- capability: docs-refactor-installation
+  description: README переписан минималистично, CLAUDE_INSTALL.md содержит явную инструкцию для Claude, README_DETAILED архивирован.
+  path: docs-refactor-installation/spec.md
+  test_plan: docs-refactor-installation/test-plan.md
+- capability: skills-folder-reorganization
+  description: Каждый скилл в отдельной папке; skills/<ns>/<skill>/skill.md вместо skills/<ns>/<skill>.md; скрипты и кейсы локализованы.
+  path: skills-folder-reorganization/spec.md
+  test_plan: skills-folder-reorganization/test-plan.md
