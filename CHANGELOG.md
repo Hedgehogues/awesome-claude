@@ -28,12 +28,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`manifest.yaml`** at repo root — canonical version store: `version`, `tools` (openspec etc.), `repos`.
 - **`sdd:` namespace** — full spec-driven development workflow (9 skills):
   - `sdd:propose` (step 4), `sdd:contradiction` (step 5), `sdd:apply` (step 6), `sdd:archive` (step 7) — core pipeline.
-  - `sdd:help` (step 1), `sdd:sync` (step 2), `sdd:repo` (step 3), `sdd:audit`, `sdd:explore` — supporting tools.
+  - `sdd:sync` (step 2), `sdd:repo` (step 3), `sdd:audit`, `sdd:explore` — supporting tools.
 - **SDD state machine** — 11-stage lifecycle (`proposed → contradiction-ok → applying → verifying → verify-ok → archiving → archived`); managed by `skills/sdd/scripts/state.py` via `.sdd-state.yaml` (gitignored).
 - **Identity resolution** — `skills/sdd/scripts/identity.py`: resolves owner email from `claude auth status` with `git config user.email` fallback.
 - **Eval framework** in `skill:test-skill` — k=5 bootstrap, ≥4/5 pass threshold, real-time progress `[case] N/5 ✓`, LLM-judge for semantic assertions, `RESULTS_FILE` output in `test-results/`.
 - **Test stubs** — `skills/skill/test-skill/stubs/with-change.md` for harness testing with active change + manifest.
-- **Namespace listing commands** — `/sdd:help`, `/dev:help`, `/research:help`, `/skill:help` (list all skills in namespace).
+- **Namespace listing commands** — `/dev:help`, `/research:help`, `/skill:help` (list all skills in namespace).
 - **7-block structured apply output** + Python report scripts for sdd:apply.
 - **OpenSpec changes pipeline** — `openspec/changes/` with proposed follow-up work:
   - `unified-test-flow` — architecture for behavioral vs acceptance test distinction.
@@ -77,7 +77,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `/sdd:archive` — now performs identity check, state transitions (`archiving → archived|archive-failed`), inline L1/L2/L3 spec-verify with REMOVED-inversion; deletes `.sdd-state.yaml` on success.
 - `/sdd:propose` — initializes `.sdd-state.yaml` (`stage=proposed`), sets `owner:` in `.sdd.yaml`, runs merge-dialog.
 - `/sdd:contradiction` — performs identity check at start, transitions state to `contradiction-ok|contradiction-failed` at end.
-- `/sdd:help` — pipeline shrunk from 10 to 8 numbered steps; workflow_step indices updated (apply=6, archive=7, audit=[8]).
 - `bump-namespace.sh` — accepts optional `<ref>` second argument (tag or branch); falls back to latest tag if omitted.
 - `docs/README_DETAILED.md` — mermaid diagram and command table updated to reflect merged verify.
 
