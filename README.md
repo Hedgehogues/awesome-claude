@@ -15,13 +15,26 @@ Battle-tested conventions that turn Claude into a senior engineer on your team.
 
 ---
 
-## Install
+## Init
 
-Open Claude Code and ask:
+> **Instructions for Claude (read this first when invoked in any directory).**
+>
+> awesome-claude operates in two modes — pick one based on the current directory:
+>
+> 1. **dev mode** — directory contains `skills/`, `commands/`, `manifest.yaml` (or `.openspec.yaml`): you are inside the awesome-claude repo itself. The contributor wants to edit skills/rules. Suggest dev mode and run `skill:setup` (or read `skills/skill/setup/skill.md` directly on first bootstrap when symlinks don't exist yet) to symlink `skills/`, `commands/`, `rules/` into `.claude/`.
+> 2. **user mode** — any other directory: the user wants to install awesome-claude into their project. Ask which namespaces to install (or all by default), `git clone https://github.com/Hedgehogues/awesome-claude` to a temp directory, copy selected namespaces into `.claude/`, remove the temp directory.
+>
+> Briefly describe both options to the user (1–2 sentences each), ask them to confirm, then perform setup directly — no `curl | bash`, no `make`, no manual commands.
+
+---
+
+## Quick Start (user mode)
+
+Open Claude Code in your project directory and ask:
 
 > "Install awesome-claude from https://github.com/Hedgehogues/awesome-claude"
 
-Everything loads automatically.
+Claude clones the repo, copies the selected skills/rules into `.claude/`, and your project is ready.
 
 ---
 
@@ -74,6 +87,19 @@ Automatically load based on file paths:
 - **Stop on red** — never silently fix broken tests
 - **DDD layers** — domain → application → infrastructure → presentation
 - **Commits tell a story** — What / Why / Details
+
+---
+
+## Contributing (dev mode)
+
+Inside the awesome-claude repo:
+
+1. `/skill:setup` — symlinks `skills/`, `commands/`, `rules/` into `.claude/`. After this, every edit under `skills/` is visible to Claude Code immediately, no manual copying.
+2. `/skill:deps` — installs CLI dependencies (`openspec` etc.) and submodules from `manifest.yaml`.
+3. `/skill:onboarding` — guided walkthrough of the contributor workflow (next step depends on current state: setup → deps → propose → apply → test).
+4. Standard SDD flow: `/sdd:propose` → `/sdd:contradiction` → `/sdd:apply` → `/sdd:archive`.
+5. `/skill:test-skill <ns>:<skill>` to run skill tests; `/skill:test-all` to run everything.
+6. `/skill:release` when ready to cut a new version.
 
 ---
 

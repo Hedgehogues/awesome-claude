@@ -21,7 +21,7 @@ After the user confirms a mode, Claude SHALL perform all setup steps directly �
 #### Scenario: User confirms dev mode
 - **WHEN** user confirms dev mode
 - **THEN** Claude checks if symlinks exist
-- **THEN** if not — Claude reads `skills/skill/setup.md` directly and executes the symlink bash commands from it
+- **THEN** if not — Claude reads `skills/skill/setup/skill.md` directly and executes the symlink bash commands from it
 - **THEN** if already linked — Claude confirms and proceeds
 
 #### Scenario: User confirms user mode

@@ -149,7 +149,94 @@ RESULT: 2 passed, 1 failed  (total checks: 16)
 
 Если есть FAILED — вывести первые 20 строк `OUTPUT` упавшего кейса.
 
-### 5. Status tracking and cleanup
+### 5. Eval-framework: bootstrap k=5 + LLM-judge + результирующий файл
+
+Каждый кейс SHALL прогоняться **k=5** раз (bootstrap). Кейс получает PASS если ≥4/5 прогонов успешны; иначе — `⚠ WARN`.
+
+#### 5a. Создать файл результатов в начале прогона
+
+В начале (до запуска первого кейса):
+
+```bash
+mkdir -p test-results
+RESULTS_FILE="test-results/$(date -u +'%Y-%m-%d-%H%M%S').md"
+cat > "$RESULTS_FILE" <<EOF
+# Test results: $ARGUMENTS
+started_at: $(date -u +'%Y-%m-%dT%H:%M:%SZ')
+test: $ARGUMENTS
+
+EOF
+```
+
+#### 5b. Прогресс в реальном времени
+
+Для каждого кейса по мере выполнения каждого из 5 прогонов выводи:
+
+```
+[<case-name>] 1/5 ✓
+[<case-name>] 2/5 ✓
+[<case-name>] 3/5 ✗
+[<case-name>] 4/5 ✓
+[<case-name>] 5/5 ✓
+[<case-name>] → PASS 4/5
+```
+
+Если ≤3/5 — финальная строка: `→ ⚠ WARN N/5`.
+
+#### 5c. Append каждого результата в RESULTS_FILE
+
+После завершения каждого кейса (всех 5 прогонов) — append блок:
+
+```markdown
+## Case: <case-name>
+result: PASS | ⚠ WARN
+runs: 5
+passed: 4
+runs_detail:
+  - run 1: PASS
+  - run 2: PASS
+  - run 3: FAIL — contains[1]: "<pattern>" not found
+  - run 4: PASS
+  - run 5: PASS
+semantic_judge_reasons:
+  - judge[1]: "yes — output confirms tmp_cleaned"
+  - judge[2]: "yes — no_residue verified"
+```
+
+#### 5d. LLM-judge для semantic assertions
+
+Каждое правило из `semantic:` SHALL оцениваться отдельным LLM-вызовом (не regex):
+
+```
+Prompt: "Output of the skill follows. Does it satisfy the criterion: <criterion>? Answer yes or no with one-line reason."
+Output: <OUTPUT>
+```
+
+Вердикт: `yes` → semantic[i] PASS; `no` → FAIL. Reason записывается в `runs_detail` и `semantic_judge_reasons`.
+
+#### 5e. Итоговый отчёт в конце файла
+
+После завершения всех кейсов (всех bootstrap-прогонов) — append к RESULTS_FILE:
+
+```markdown
+---
+## Summary
+total_cases: 3
+passed: 2
+warned: 1
+failed: 0
+duration_ms: 45230
+finished_at: 2026-05-02T03:15:45Z
+```
+
+И финальный print в stdout:
+
+```
+Results: test-results/2026-05-02-031500.md
+2 PASS, 1 WARN, 0 FAIL
+```
+
+### 6. Status tracking and cleanup
 
 **Before running cases:** Create `$RUN_ROOT/status.json`:
 ```json

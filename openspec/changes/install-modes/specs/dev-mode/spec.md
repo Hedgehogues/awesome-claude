@@ -8,10 +8,10 @@
 - **THEN** Claude Code sees the change without any additional commands
 
 ### Requirement: Dev mode bootstrap when skill:setup is not yet available
-On first use in a freshly cloned repo, `skill:setup` is not yet accessible via Claude Code (symlinks don't exist yet). Claude SHALL read `skills/skill/setup.md` directly and execute it as a one-time bootstrap.
+On first use in a freshly cloned repo, `skill:setup` is not yet accessible via Claude Code (symlinks don't exist yet). Claude SHALL read `skills/skill/setup/skill.md` directly and execute it as a one-time bootstrap.
 
 #### Scenario: First-time bootstrap in cloned repo
 - **WHEN** Claude is invoked in the awesome-claude repo and `.claude/skills` is not a symlink
-- **THEN** Claude reads `skills/skill/setup.md` directly from the repo
+- **THEN** Claude reads `skills/skill/setup/skill.md` directly from the repo
 - **THEN** Claude creates symlinks as specified in the skill
 - **THEN** subsequent invocations use `skill:setup` normally via `.claude/`

@@ -11,3 +11,4 @@ CLAUDE.md
 
 # SDD workflow runtime state
 **/.sdd-state.yaml
+__pycache__/
