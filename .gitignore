@@ -8,3 +8,6 @@ settings.local.json
 CLAUDE.md
 
 .DS_Store
+
+# SDD workflow runtime state
+**/.sdd-state.yaml

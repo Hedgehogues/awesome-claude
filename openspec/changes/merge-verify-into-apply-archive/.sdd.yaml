@@ -1,7 +1,8 @@
 creates:
-  - sdd-apply
-  - sdd-archive
-  - sdd-state
-  - sdd-ownership
-  - sdd-propose-merge-dialog
+- sdd-apply
+- sdd-archive
+- sdd-state
+- sdd-ownership
+- sdd-propose-merge-dialog
 merges-into: []
+owner: e.s.urvanov@gmail.com

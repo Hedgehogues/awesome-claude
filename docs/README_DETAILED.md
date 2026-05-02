@@ -218,22 +218,22 @@ Requires [OpenSpec CLI](https://openspec.dev): `npm install -g @fission-ai/opens
 graph LR
     P["/sdd:propose"] --> C["/sdd:contradiction"]
     C --> A["/sdd:apply"]
-    A --> CV["/sdd:change-verify"]
-    CV --> AR["/sdd:archive"]
-    AR --> SV["/sdd:spec-verify"]
-    SV --> AU["/sdd:audit"]
+    A --> AR["/sdd:archive"]
+    AR --> AU["/sdd:audit"]
 
     style C fill:#FFF3E0,stroke:#FF9800,stroke-width:2px
+    style A fill:#E8F5E9,stroke:#4CAF50,stroke-width:2px
+    style AR fill:#E8F5E9,stroke:#4CAF50,stroke-width:2px
 ```
+
+Note: verify (L1/L2/L3) теперь встроен в `/sdd:apply` (против tasks.md) и `/sdd:archive` (против live spec.md). Отдельных команд `/sdd:change-verify` и `/sdd:spec-verify` больше нет.
 
 | Command | What It Does |
 |---------|-------------|
-| **`/sdd:propose`** | Propose a new change: generate proposal, design, specs, tasks in one step |
+| **`/sdd:propose`** | Propose a new change: generate proposal, design, specs, tasks in one step. Initializes `.sdd-state.yaml` and `.sdd.yaml owner:` |
 | **`/sdd:contradiction`** | Check change artifacts for contradictions and broken references |
-| **`/sdd:apply`** | Implement tasks from tasks.md |
-| **`/sdd:change-verify`** | Verify implementation against tasks.md |
-| **`/sdd:archive`** | Archive completed change, sync delta specs to `openspec/specs/` |
-| **`/sdd:spec-verify`** | Verify implementation against live spec in `openspec/specs/` |
+| **`/sdd:apply`** | Implement tasks from tasks.md (L1/L2/L3 verify against tasks.md встроен; updates `.sdd-state.yaml`) |
+| **`/sdd:archive`** | Archive completed change, sync delta specs to `openspec/specs/` (L1/L2/L3 spec-verify with REMOVED-inversion встроен; deletes `.sdd-state.yaml` on success) |
 | **`/sdd:audit`** | Audit manifest consistency (structural + semantic) |
 | **`/sdd:explore`** | Enter exploration mode — non-linear, applicable at any phase |
 | **`/sdd:help`** | Show repo state and full workflow pipeline |

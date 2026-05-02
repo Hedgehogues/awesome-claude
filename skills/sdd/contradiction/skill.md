@@ -11,6 +11,31 @@ description: >
 
 # Contradiction checker (sdd:contradiction)
 
+## Identity check (если PATH — change-директория)
+
+Если PATH является change-директорией (содержит `proposal.md` и `.sdd.yaml`), перед основным анализом:
+
+1. Получи текущий email через Bash tool:
+   ```bash
+   python3 "${CLAUDE_SKILL_DIR}/../scripts/identity.py"
+   ```
+   Если скрипт вернул exit ≠ 0 — выведи stderr и остановись.
+
+2. Прочитай `owner:` из `.sdd.yaml` через:
+   ```bash
+   python3 "${CLAUDE_SKILL_DIR}/../scripts/_sdd_yaml.py" read "<change-dir>"
+   ```
+3. Если `owner` пуст или совпадает с email → продолжай молча.
+4. Если `owner != email` → выведи warning:
+   `⚠ Это change owner=<owner>, ты <email>. Перезаписать на тебя?`
+   Через AskUserQuestion. При согласии:
+   ```bash
+   python3 "${CLAUDE_SKILL_DIR}/../scripts/_sdd_yaml.py" set-owner "<change-dir>" "<email>"
+   ```
+   При отказе — остановись с сообщением «работа над чужим change'ем отклонена».
+
+Если PATH — не change-директория — пропусти этот шаг молча.
+
 ## Cross-spec preamble (если PATH — change-директория)
 
 Если PATH является change-директорией (содержит `proposal.md`), перед основным анализом:
@@ -542,3 +567,19 @@ echo "<детализированный отчёт выше>" | python3 "${CLAUD
 2. **Форма ответа = форма запроса.** Семиблочный формат — только в этом финальном выводе. В промежуточной переписке — проза, 2–3 предложения, без markdown-секций.
 3. **Действие первое, отчёт после.** Никаких pre-action narration для диагностических шагов.
 4. **Ноль внутреннего жаргона в user-facing полях.** В `## Описание` и `## Решено самостоятельно` SHALL NOT появляться: `hard issue`, `drift_score`, `residual_risk`, `SSOT`, `pointer-rewrite`, `Mandatory-блок N`, `convergence`. Жаргон допускается только внутри `## Технические статусы` (там отчёт детекторов verbatim).
+
+## State-update (если PATH — change-директория)
+
+После рендера отчёта обнови `.sdd-state.yaml`:
+
+```bash
+# при hard_counts.total == 0:
+python3 "${CLAUDE_SKILL_DIR}/../scripts/state.py" transition "<change-dir>/.sdd-state.yaml" contradiction-ok
+
+# при hard_counts.total > 0:
+python3 "${CLAUDE_SKILL_DIR}/../scripts/state.py" transition "<change-dir>/.sdd-state.yaml" contradiction-failed
+```
+
+Если `state.py` сообщил `transition not allowed` (текущая stage не позволяет переход) — выведи stderr скрипта в `## Технические статусы`, но не останавливай скилл (отчёт уже отрендерен). Это сигнал, что workflow в неконсистентном состоянии — пользователь разберётся вручную.
+
+Если PATH — не change-директория — пропусти этот шаг молча.

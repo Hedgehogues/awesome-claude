@@ -1,6 +1,6 @@
 ---
 name: sdd:audit
-display_positions: [10]
+display_positions: [8]
 description: >
   Семантический аудит инвентаря: проверяет консистентность manifest.yaml,
   .gitmodules и состояния субмодулей. Вызывать перед коммитом изменений в

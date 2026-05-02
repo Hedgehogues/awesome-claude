@@ -72,27 +72,27 @@ Live specs:
 - Скиллы с `display_positions` (например `[10]`) — вставляй в пайплайн на каждую из указанных позиций.
 - Скиллы без `workflow_step` и без `display_positions` — в секцию «Дополнительно».
 
-**Шаг 3**: Вставь в пайплайн хардкодированные `opsx:*` якоря на фиксированных позициях:
-- Позиция 4: `/opsx:propose` — предложить change, сгенерировать все артефакты за один шаг
-- Позиция 6: `/opsx:apply` — реализовать задачи из tasks.md
-- Позиция 8: `/opsx:archive` — архивировать завершённый change, синкнуть delta specs
+**Шаг 3**: Вставь в пайплайн хардкодированные `opsx:*` якоря как алиасы соответствующих sdd-команд:
+- `/opsx:propose` — алиас для `/sdd:propose` (предложить change)
+- `/opsx:apply` — алиас для `/sdd:apply` (реализовать задачи из tasks.md, со встроенным verify)
+- `/opsx:archive` — алиас для `/sdd:archive` (архивировать со встроенной spec-верификацией)
 
-Результирующий пайплайн при текущих скиллах (help=1, sync=2, repo=3, contradiction=5, change-verify=7, spec-verify=9, audit=[10]):
+Результирующий пайплайн при текущих скиллах (help=1, sync=2, repo=3, propose=4, contradiction=5, apply=6, archive=7, audit=[8]):
 
 ```
  1. /sdd:help          — точка входа, состояние репы + пайплайн
  2. /sdd:sync          — синхронизация субмодулей
  3. /sdd:repo          — управление репами в инвентаре
- 4. /opsx:propose      — предложить change, сгенерировать все артефакты за один шаг
+ 4. /sdd:propose       — предложить change, сгенерировать все артефакты за один шаг
  5. /sdd:contradiction — вычитка артефактов на противоречия
- 6. /opsx:apply        — реализовать задачи из tasks.md
- 7. /sdd:change-verify — post-apply приёмка
- 8. /opsx:archive      — архивировать завершённый change, синкнуть delta specs
- 9. /sdd:spec-verify   — верификация по live-спеке
-10. /sdd:audit         — аудит инвентаря (финальная проверка)
+ 6. /sdd:apply         — реализовать задачи из tasks.md (verify встроен)
+ 7. /sdd:archive       — архивировать change, синкнуть delta specs (spec-verify встроен)
+ 8. /sdd:audit         — аудит инвентаря (финальная проверка)
 ```
 
-Для каждого шага выводи: номер, команду, однострочное описание из `description` скилла (или хардкодированное для opsx).
+**Verify теперь часть apply/archive** — отдельных команд `/sdd:change-verify` и `/sdd:spec-verify` больше нет.
+
+Для каждого шага выводи: номер, команду, однострочное описание из `description` скилла.
 
 **Если найден новый `sdd:*` скилл с `workflow_step`**, вставь его в нужную позицию без изменений в этом файле.
 
@@ -104,13 +104,11 @@ Live specs:
  1. /sdd:help          — <описание>
  2. /sdd:sync          — <описание из frontmatter>
  3. /sdd:repo          — <описание из frontmatter>
- 4. /opsx:propose      — <описание>
+ 4. /sdd:propose       — <описание из frontmatter>
  5. /sdd:contradiction — <описание из frontmatter>
- 6. /opsx:apply        — <описание>
- 7. /sdd:change-verify — <описание из frontmatter>
- 8. /opsx:archive      — <описание>
- 9. /sdd:spec-verify   — <описание из frontmatter>
-10. /sdd:audit         — <описание из frontmatter>
+ 6. /sdd:apply         — <описание из frontmatter>
+ 7. /sdd:archive       — <описание из frontmatter>
+ 8. /sdd:audit         — <описание из frontmatter>
 
 --- Дополнительно ---
 /sdd:<name>  — <описание>   ← скиллы без workflow_step и display_positions
