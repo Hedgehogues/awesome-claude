@@ -32,12 +32,21 @@ $ARGUMENTS
 
 ### 2. Прогони каждый тест
 
+Создай единый рабочий корень на весь прогон и зарегистрируй авто-cleanup:
+
+```bash
+RUN_ROOT=$(mktemp -d -t skill-test-all-XXXXXX)
+trap "rm -rf '$RUN_ROOT'" EXIT
+```
+
 Для каждого теста выполни логику из `skill:test-skill`:
-- Создай изолированный `TMP`
+- Per-test TMP = `$RUN_ROOT/<ns>-<skill>/`
 - Прочитай спеку, выполни Setup, скопируй файлы скилла
 - Запусти Agent с телом скилла (без frontmatter) + контекстом `Working directory: <TMP>`
 - Проверь паттерны из `## Checks`
 - Сохрани результат: PASS / FAIL / SKIP
+
+После завершения всех тестов `trap` авто-удалит `$RUN_ROOT`.
 
 ### 3. Сводная таблица
 

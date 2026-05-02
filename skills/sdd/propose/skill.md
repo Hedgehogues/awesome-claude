@@ -53,3 +53,35 @@ description: >
 6. **Проверь что `proposal.md` ссылается на `.sdd.yaml`**.
    Если ссылки нет → выведи: `proposal.md does not reference .sdd.yaml`
    и запроси добавление ссылки (например: "See `.sdd.yaml` for capability declarations").
+
+7. **Создай stub-кейсы для новых скиллов** (если применимо).
+
+   Если в `## What Changes` или `## Capabilities → New Capabilities` proposal.md упоминается создание нового `skills/<ns>/<skill>/skill.md` (или аналогичного):
+
+   Для каждого нового скилла `<ns>:<skill>` создай файл `skills/<ns>/<skill>/cases/<skill>.md`:
+
+   ```markdown
+   ## Case: positive-happy-<skill>-base
+   stub: fresh-repo
+   contains:
+     - "TODO: expected success output"
+
+   ## Case: positive-corner-<skill>-edge
+   stub: fresh-repo
+   contains:
+     - "TODO: edge case output"
+
+   ## Case: negative-missing-input-<skill>-no-artifact
+   stub: fresh-repo
+   contains:
+     - "TODO: missing artifact error"
+
+   ## Case: negative-invalid-input-<skill>-bad-input
+   stub: fresh-repo
+   contains:
+     - "TODO: invalid input error"
+   ```
+
+   Сообщи: `Created stub cases for <ns>:<skill> at skills/<ns>/<skill>/cases/<skill>.md — fill in TODO fields before shipping`.
+
+   Если новых скиллов нет — шаг пропускается без вывода.

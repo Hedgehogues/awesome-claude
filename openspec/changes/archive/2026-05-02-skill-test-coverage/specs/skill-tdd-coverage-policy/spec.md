@@ -45,7 +45,7 @@ When `sdd:propose` (or any skill-creation flow) registers a new skill in proposa
 - **THEN** rule is mirrored at `.claude/rules/skill-tdd-coverage.md`
 
 ### Requirement: Coverage scope stays at unit level
-The 4-category matrix applies to **unit-level** behavior tests using stubs and mocks (per `mock-stubs-extended`). Integration tests (real services, real infrastructure) are explicitly out of scope of this policy and `skill:test-all` does not enforce coverage for them.
+The 4-category matrix SHALL apply to **unit-level** behavior tests using stubs and mocks (per `mock-stubs-extended`). Integration tests (real services, real infrastructure) are explicitly out of scope of this policy and `skill:test-all` SHALL NOT enforce coverage for them.
 
 #### Scenario: Integration coverage is not enforced
 - **WHEN** `check-coverage-matrix.py` audits skills

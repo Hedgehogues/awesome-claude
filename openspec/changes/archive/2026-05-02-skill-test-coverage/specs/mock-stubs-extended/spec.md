@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Stub format supports files, mock_commands, env fields
-Stubs at `skills/skill/stubs/<name>.md` MAY contain three additional YAML fields beyond `git`, `skills`, `openspec`:
+Stubs at `skills/skill/stubs/<name>.md` SHALL support three additional YAML fields beyond `git`, `skills`, `openspec`:
 
 - `files:` — map of `path: content`. Each entry SHALL be materialized as a file at `$TMP/<path>` during stub setup.
 - `mock_commands:` — map of `command: shim-script-body`. Each entry SHALL be created as an executable file at `$TMP/.mocks/<command>` during stub setup.

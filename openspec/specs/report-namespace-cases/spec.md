@@ -1,5 +1,10 @@
-# report-namespace-cases
+## Purpose
+Test cases for report:* skills (describe, session-report).
+## Requirements
+### Requirement: cases/report/ directory exists with one file per report skill
+`skills/skill/cases/report/` SHALL exist and contain `describe.md` and `session-report.md`, each with at least two cases.
 
-This capability is part of the skill-test-coverage change.
+#### Scenario: report namespace cases discoverable
+- **WHEN** `skill:test-skill report:<name>` is invoked
+- **THEN** cases file found, at least one case runs
 
-See `openspec/changes/skill-test-coverage/design.md` and `proposal.md` for details.

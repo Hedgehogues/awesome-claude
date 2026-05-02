@@ -129,7 +129,7 @@
 - [x] 15.4 Зеркалить скрипт в `.claude/skills/skill/scripts/`
 - [x] 15.5 Обновить `skills/skill/test-all.md`: после прогона всех тестов вызывать `check-coverage-matrix.py`, выводить отчёт по покрытию матрицы
 - [x] 15.6 Зеркалить `test-all.md` в `.claude/skills/skill/`
-- [ ] 15.7 Обновить `skills/sdd/propose.md` (+зеркало): когда `proposal.md` декларирует новый скилл — автогенерировать `cases/<ns>/<skill>.md` со stub-кейсами по 4 категориям
+- [x] 15.7 Обновить `skills/sdd/propose.md` (+зеркало): когда `proposal.md` декларирует новый скилл — автогенерировать `cases/<ns>/<skill>.md` со stub-кейсами по 4 категориям
 
 ## 16. Test execution lifecycle (spec: test-execution-lifecycle)
 

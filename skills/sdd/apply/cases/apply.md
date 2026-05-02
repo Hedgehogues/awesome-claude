@@ -24,3 +24,86 @@ stub: specs-with-index
 semantic:
   - existing_index_respected: skill reads existing openspec/specs/index.yaml and merges new entries
       rather than overwriting cap-alpha and cap-beta
+
+## Case: final-report-canonical-block-order
+stub: change-with-sdd-yaml
+semantic:
+  - block_order: final output contains headings in canonical order top-to-bottom —
+      "## Технические статусы" before "## Описание" before "## Реализованные фичи"
+      before "## Как проверить" before optional "## Решено самостоятельно"
+      before optional "## Прочее" before "## Вопросы к пользователю" (last)
+  - questions_last: "## Вопросы к пользователю" is the final heading in the output
+
+## Case: no-content-below-questions-block
+stub: change-with-sdd-yaml
+semantic:
+  - nothing_after_questions: no markdown heading and no prose appears after the last line
+      of "## Вопросы к пользователю"; the section is always the terminal block
+
+## Case: no-real-questions-renders-prodolzhayu
+stub: change-with-sdd-yaml
+contains:
+  - "Продолжаю."
+semantic:
+  - prodolzhayu_present: when all forks are resolved autonomously,
+      "## Вопросы к пользователю" body is exactly the literal line "Продолжаю."
+  - no_numbered_list: no numbered list and no question mark appear inside
+      "## Вопросы к пользователю" when there are no real user-only questions
+  - no_synthetic_cta: the string "Продолжаем по флоу?" does NOT appear in the output;
+      it is absent unless the user literally asked that exact question in this session
+
+## Case: empty-creates-renders-net-in-features
+stub: fresh-repo
+semantic:
+  - features_net: when .sdd.yaml.creates is empty or absent,
+      "## Реализованные фичи" heading is present and its body contains "_нет_"
+  - heading_present: the "## Реализованные фичи" heading itself is always rendered
+
+## Case: autonomous-decisions-in-resolved-block
+stub: change-with-sdd-yaml
+semantic:
+  - decisions_in_resolved: any autonomous fork resolution (name, path, command choice)
+      appears as a line with "→" only inside "## Решено самостоятельно",
+      not inside "## Вопросы к пользователю"
+  - arrow_marker: "## Решено самостоятельно" entries follow the format "вопрос → решение"
+
+## Case: kak-proveryat-has-three-fields-per-feature
+stub: change-with-sdd-yaml
+contains:
+  - "**Что:**"
+  - "**Где:**"
+  - "**Как:**"
+semantic:
+  - three_fields: for each capability listed in "## Реализованные фичи",
+      "## Как проверить" contains at least one numbered entry with all three fields:
+      "**Что:**", "**Где:**", "**Как:**"
+  - coverage: number of entries in "## Как проверить" matches number of capabilities
+      in "## Реализованные фичи"
+
+## Case: empty-creates-kak-proveryat-renders-net
+stub: fresh-repo
+semantic:
+  - kak_proveryat_heading: "## Как проверить" heading is present even when creates is empty
+  - kak_proveryat_net: body of "## Как проверить" contains "_нет_" when .sdd.yaml.creates
+      is empty or test-plan.md is missing or has only placeholder content
+
+## Case: no-jargon-in-user-facing-blocks
+stub: change-with-sdd-yaml
+semantic:
+  - no_hard_issue: the string "hard issue" does not appear in "## Описание"
+      or "## Решено самостоятельно"
+  - no_drift_score: the string "drift_score" does not appear in "## Описание"
+      or "## Решено самостоятельно"
+  - no_ssot: the string "SSOT" does not appear in "## Описание"
+      or "## Решено самостоятельно"
+  - no_pointer_rewrite: the string "pointer-rewrite" does not appear in
+      "## Описание" or "## Решено самостоятельно"
+
+## Case: intermediate-clarifications-use-prose
+stub: change-with-sdd-yaml
+semantic:
+  - no_block_headers_in_intermediate: when the skill responds to a clarification
+      or meta-question before the final report is produced, the intermediate reply
+      does NOT contain the headings "## Технические статусы", "## Описание",
+      or "## Вопросы к пользователю"
+  - prose_only: intermediate responses are 2–3 sentences of plain prose

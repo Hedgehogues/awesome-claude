@@ -140,3 +140,8 @@ specs:
     skills/<ns>/<skill>.md; скрипты и кейсы локализованы.
   path: skills-folder-reorganization/spec.md
   test_plan: skills-folder-reorganization/test-plan.md
+- capability: structured-apply-output
+  description: Fixed 7-block user-facing output for sdd:apply, sdd:contradiction,
+    sdd:archive with canonical block order
+  path: structured-apply-output/spec.md
+  test_plan: structured-apply-output/test-plan.md

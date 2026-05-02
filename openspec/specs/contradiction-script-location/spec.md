@@ -1,5 +1,16 @@
-# contradiction-script-location
+## Purpose
+Relocation of contradiction.py to scripts/ subdirectory alongside the skill.
+## Requirements
+### Requirement: contradiction.py resides in skills/sdd/scripts/
+`contradiction.py` SHALL reside at `skills/sdd/scripts/contradiction.py`. The file SHALL NOT exist at `skills/sdd/contradiction.py`. `skills/sdd/contradiction.md` SHALL reference the script via `${CLAUDE_SKILL_DIR}/scripts/contradiction.py`.
 
-This capability is part of the skill-test-coverage change.
+#### Scenario: script at correct location
+- **WHEN** developer looks for `contradiction.py`
+- **THEN** it is found at `skills/sdd/scripts/contradiction.py`
+- **THEN** it is NOT present at `skills/sdd/contradiction.py`
 
-See `openspec/changes/skill-test-coverage/design.md` and `proposal.md` for details.
+#### Scenario: skill references correct path
+- **WHEN** `skills/sdd/contradiction.md` is read
+- **THEN** the path `${CLAUDE_SKILL_DIR}/scripts/contradiction.py` is used
+- **THEN** no hardcoded absolute path appears
+

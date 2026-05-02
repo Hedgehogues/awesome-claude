@@ -141,7 +141,7 @@ Ask Claude to install with dev skills:
 /skill:test-all sdd
 ```
 
-`skill:*` skills are dev-only — not included in regular user installs. Test specs live in `skills/skill/cases/<namespace>/<skill>.md`.
+`skill:*` skills are dev-only — not included in regular user installs. Test specs live in `skills/<namespace>/<skill>/cases/<skill>.md`.
 
 **Updating a namespace:**
 

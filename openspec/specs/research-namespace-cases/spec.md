@@ -1,5 +1,10 @@
-# research-namespace-cases
+## Purpose
+Test cases for research:* skills (triz).
+## Requirements
+### Requirement: cases/research/ directory exists with one file per research skill
+`skills/skill/cases/research/` SHALL exist and contain `triz.md` with at least two cases.
 
-This capability is part of the skill-test-coverage change.
+#### Scenario: research namespace cases discoverable
+- **WHEN** `skill:test-skill research:triz` is invoked
+- **THEN** cases file found, at least one case runs
 
-See `openspec/changes/skill-test-coverage/design.md` and `proposal.md` for details.
