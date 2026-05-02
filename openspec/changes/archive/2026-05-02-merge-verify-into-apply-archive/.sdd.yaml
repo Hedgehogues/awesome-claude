@@ -1,0 +1,12 @@
+creates:
+- sdd-apply
+- sdd-archive
+- sdd-state
+- sdd-ownership
+- sdd-propose-merge-dialog
+merges-into:
+- sdd-change-verify-cases
+- sdd-remaining-cases
+- sdd-apply-cases
+- sdd-archive-cases
+owner: e.s.urvanov@gmail.com

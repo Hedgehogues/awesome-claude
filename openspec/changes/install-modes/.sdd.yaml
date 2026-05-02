@@ -1,0 +1,14 @@
+creates:
+- dev-mode
+- install-modes
+- dev-setup-skill
+- manifest
+- deps-skill
+- contributor-workflow
+- claude-init-mode
+- sdd-test-coverage
+- skill-eval-framework
+- skill-release
+merges-into:
+- user-interface-principle
+owner: e.s.urvanov@gmail.com

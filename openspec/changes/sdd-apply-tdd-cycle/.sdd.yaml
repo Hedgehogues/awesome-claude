@@ -1,0 +1,6 @@
+creates:
+  - sdd-apply-tdd-cycle
+merges-into: []
+requires:
+  - sdd-apply
+  - skill-test-runner-script

@@ -395,3 +395,130 @@ allowed-tools: Bash(git log *), Read
 ```
 
 ~30 lines. Precomputed context. Clear output template. Haiku handles this perfectly.
+
+---
+
+## SDD Layer Artifacts
+
+SDD-слой добавляет несколько обязательных артефактов в каждую change-директорию.
+
+### Change-директория (полная структура)
+
+```
+openspec/changes/<name>/
+├── proposal.md       ← ссылается на .sdd.yaml
+├── design.md
+├── tasks.md
+├── test-plan.md      ← обязательный SDD-артефакт
+└── .sdd.yaml         ← машиночитаемое объявление capabilities
+```
+
+### test-plan.md
+
+YAML front matter + markdown body. Создаётся автоматически в `sdd:propose`. Читается в `sdd:apply`. Копируется в `openspec/specs/<capability>/` при архивировании.
+
+```markdown
+---
+approach: |
+  Describe test approach here
+acceptance_criteria:
+  - criterion one
+  - criterion two
+---
+
+## Scenarios
+
+Describe scenarios in prose here.
+```
+
+- `approach` — текстовое описание стратегии тестирования
+- `acceptance_criteria` — список условий приёмки
+- `## Scenarios` — сценарии в свободной форме
+
+### .sdd.yaml
+
+Машиночитаемое объявление того, что создаёт или модифицирует change. Создаётся автоматически в `sdd:propose`. Читается `sdd:contradiction` для определения scope анализа.
+
+```yaml
+creates:
+  - capability-name        # новые capabilities, создаваемые этим change'ем
+merges-into:
+  - other-capability       # существующие capabilities, которые change модифицирует
+```
+
+- `creates` — список новых capability-имён (kebab-case)
+- `merges-into` — список существующих capabilities, затрагиваемых change'ем; `[]` если только новые
+
+### openspec/specs/index.yaml
+
+Единый машиночитаемый реестр всех финализированных спек. Обновляется автоматически в `sdd:apply` и `sdd:archive`. Читается `contradiction.py` для сборки пакета анализа.
+
+```yaml
+specs:
+  - capability: user-auth
+    description: Authentication and authorization
+    path: user-auth/spec.md
+    test_plan: user-auth/test-plan.md
+  - capability: session-management
+    description: Session lifecycle management
+    path: session-management/spec.md
+    test_plan: session-management/test-plan.md
+```
+
+Каждая запись содержит:
+- `capability` — уникальное имя (kebab-case)
+- `description` — краткое описание (одна строка)
+- `path` — путь к `spec.md` относительно `openspec/specs/`
+- `test_plan` — путь к `test-plan.md` относительно `openspec/specs/`
+
+### Стандартный формат вывода workflow-скиллов (7-блочная структура)
+
+`sdd:apply`, `sdd:contradiction`, `sdd:archive` всегда завершаются финальным отчётом в **фиксированном порядке блоков**:
+
+| # | Блок | Тип | Присутствует |
+|---|------|-----|--------------|
+| 1 | `## Технические статусы` | mandatory | все три скилла |
+| 2 | `## Описание` | mandatory | все три скилла |
+| 3 | `## <per-skill итог>` | mandatory | все три (названия разные) |
+| 4 | `## Как проверить` | mandatory | **только `sdd:apply`** |
+| 5 | `## Решено самостоятельно` | optional | все три (опускается если пусто) |
+| 6 | `## Прочее` | optional | все три (опускается если пусто) |
+| 7 | `## Вопросы к пользователю` | mandatory | все три, **всегда последний** |
+
+**Per-skill блок 3:**
+- `sdd:apply` → `## Реализованные фичи` (capabilities из `.sdd.yaml.creates` со статусом `done`/`partial`)
+- `sdd:contradiction` → `## Найденные противоречия` (компактный счётчик из Summary детекторов)
+- `sdd:archive` → `## Архивированные артефакты` (capabilities + пути к spec.md и test-plan.md)
+
+**Правила блока 7 «Вопросы к пользователю»:**
+- Содержит только реальные user-only вопросы нумерованным списком
+- Если таких нет — ровно одна строка: `Продолжаю.`
+- Синтетический CTA `Продолжаем по флоу?` **запрещён**
+- Этот блок всегда последний; после него нет заголовков и прозы
+
+**Правила коммуникационного стиля** (обязательны для финального отчёта, рекомендованы для промежуточных шагов):
+1. **Действие по умолчанию:** развилки, закрываемые разумным предположением, Claude закрывает сам → фиксирует в `## Решено самостоятельно`
+2. **Форма ответа = форма запроса:** 7-блочный формат только в финальном выводе; в промежуточных обменах — проза 2–3 предложения
+3. **Действие первое:** Edit/Write до отчётности; pre-action narration только для деструктивных/долгих операций
+4. **Ноль жаргона в user-facing полях:** `## Описание` и `## Решено самостоятельно` не содержат `hard issue`, `drift_score`, `SSOT`, `pointer-rewrite`, `Mandatory-блок N`
+
+**Скрипты сбора данных** (в `skills/sdd/scripts/`):
+- `apply_report.py` — читает `.sdd.yaml`, `tasks.md`, `test-plan.md` → JSON для финального отчёта
+- `contradiction_summary.py` — парсит Summary детализированного отчёта → JSON счётчиков
+- `archive_report.py` — читает `.sdd.yaml`, проверяет наличие файлов в `openspec/specs/` → JSON
+- `_sdd_yaml.py` — общий парсер `.sdd.yaml`, импортируется тремя предыдущими
+
+---
+
+### Обязательные секции design.md
+
+`sdd:propose` проверяет, что `design.md` содержит все четыре секции стандартной openspec-структуры:
+
+```
+## Technical Approach
+## Architecture Decisions
+## Data Flow
+## File Changes
+```
+
+Если секция отсутствует — автор получает сообщение с требованием добавить её перед продолжением.

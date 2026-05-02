@@ -2,402 +2,113 @@
 
 # awesome-claude
 
-**Not a list of links. A working `.claude/` directory you drop into any project.**
+**Engineering rules & skills for Claude Code.**
 
-Battle-tested rules, skills, and agents that turn Claude Code into a senior engineer on your team.
+Battle-tested conventions that turn Claude into a senior engineer on your team.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Claude Code](https://img.shields.io/badge/Claude_Code-compatible-blueviolet)](https://claude.ai/code)
-[![Setup](https://img.shields.io/badge/setup-30_seconds-brightgreen)](#-quick-start)
-[![Rules](https://img.shields.io/badge/rules-15-green)](#-rules)
-[![Skills](https://img.shields.io/badge/skills-16-orange)](#-skills)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
-
-<br>
-
-```
-git clone git@github.com:Hedgehogues/awesome-claude.git .claude
-```
-
-Clone. Start Claude Code. Everything loads automatically.
+[![Skills](https://img.shields.io/badge/skills-16-orange)](#skills)
+[![Rules](https://img.shields.io/badge/rules-15-green)](#rules)
 
 </div>
 
 ---
 
-## Why?
+## Init
 
-Out of the box, Claude Code is powerful but generic. It doesn't know your architecture, commit style, testing philosophy, or how your team works.
-
-**You end up repeating the same instructions every session:**
-
-> "Write tests first, then implementation"
-> "Use DDD layers: domain -> application -> infrastructure -> presentation"
-> "Stop and ask me if tests break -- don't try to fix them yourself"
-> "Commit messages must have What/Why/Details sections"
-
-**awesome-claude** solves this. Clone once -- Claude remembers forever.
+> **Instructions for Claude (read this first when invoked in any directory).**
+>
+> awesome-claude operates in two modes — pick one based on the current directory:
+>
+> 1. **dev mode** — directory contains `skills/`, `commands/`, `manifest.yaml` (or `.openspec.yaml`): you are inside the awesome-claude repo itself. The contributor wants to edit skills/rules. Suggest dev mode and run `skill:setup` (or read `skills/skill/setup/skill.md` directly on first bootstrap when symlinks don't exist yet) to symlink `skills/`, `commands/`, `rules/` into `.claude/`.
+> 2. **user mode** — any other directory: the user wants to install awesome-claude into their project. Ask which namespaces to install (or all by default), `git clone https://github.com/Hedgehogues/awesome-claude` to a temp directory, copy selected namespaces into `.claude/`, remove the temp directory.
+>
+> Briefly describe both options to the user (1–2 sentences each), ask them to confirm, then perform setup directly — no `curl | bash`, no `make`, no manual commands.
 
 ---
 
-## What's Inside
+## Quick Start (user mode)
 
-```
-.claude/
-├── rules/           15 project-specific conventions (~60K chars)
-│   ├── arch/        DDD contracts, tests, security, state ownership
-│   ├── break-stop.md     hard stop when tests break
-│   ├── git.md            structured commit messages
-│   ├── frontend-*.md     UI design, testing, components
-│   └── meta-rules.md     how to write rules (see also docs/RULES_GUIDE.md)
-├── skills/          slash commands (/tdd, /commit, /tracing, ...)
-└── docs/
-    ├── SKILL_DESIGN.md        how to write skills: inline vs fork, model selection, hooks
-    ├── RULES_GUIDE.md         how to write rules that don't waste tokens
-    ├── REPO_ORGANIZATION.md   monorepo structure, DDD anatomy, 3-agent rule
-    └── STRANGLER_PATTERN.md   reorganize bounded contexts without breaking the system
-```
+Open Claude Code in your project directory and ask:
+
+> "Install awesome-claude from https://github.com/Hedgehogues/awesome-claude"
+
+Claude clones the repo, copies the selected skills/rules into `.claude/`, and your project is ready.
 
 ---
 
 ## How It Works
 
-```mermaid
-graph LR
-    A["You: claude"] --> B[".claude/ detected"]
-    B --> C["Rules loaded<br/>(scoped by file path)"]
-    B --> D["Skills available<br/>(/tdd, /commit, ...)"]
-    C --> F["Claude writes code<br/>following YOUR conventions"]
-    D --> F
 ```
-
-**Rules** use YAML frontmatter to scope when they activate. Claude only sees what's relevant:
-
-```yaml
----
-paths:
-  - "src/domain/**"        # only loads when editing domain files
-  - "src/application/**"
----
+You ask Claude → .claude/ detected → Rules loaded (by file path)
+                                   → Skills available (/tdd, /commit, ...)
+                                   → Claude writes code following YOUR conventions
 ```
-
-**Skills** are slash commands you invoke directly. Type `/tdd` and watch the full red-green-refactor cycle.
-
----
-
-## Quick Start
-
-```bash
-# 1. Clone into your project root
-git clone git@github.com:Hedgehogues/awesome-claude.git .claude
-
-# 2. Exclude from your project's git (it has its own repo)
-echo ".claude/" >> .gitignore
-
-# 3. Start Claude Code -- everything loads automatically
-claude
-```
-
-**Updating:**
-
-```bash
-cd .claude && git pull
-```
-
-That's it. No config files. No setup scripts. No dependencies.
 
 ---
 
 ## Skills
 
-Type a slash command in Claude Code to activate a skill. Each skill runs a full workflow -- not just a prompt, but a multi-step process with verification.
+16 slash commands that run full workflows — not just prompts.
 
-> **Writing your own?** See [Skill Design Principles](docs/SKILL_DESIGN.md) -- inline vs fork execution, model selection, prompt compression, `!`command`` precomputation, hooks, and a checklist for shipping.
+**Write code the right way:**
+- `/dev:tdd` — Red → green → refactor
+- `/dev:fix-bug` — Trace root cause, then fix
+- `/dev:commit` — Structured commit: What/Why/Details
 
-Skills run in two modes. **Inline** (default) injects the prompt into the current conversation -- the skill sees your full history and shares tool state. **Fork** (`context: fork`) runs in an isolated subprocess -- useful when a skill produces massive output or needs a clean context. All 16 skills in this repo are inline.
+**Manage changes:**
+- `/sdd:propose` — Design + specs + tasks in one step
+- `/sdd:contradiction` — Check design for contradictions
+- `/sdd:apply` — Implement checklist
+- `/sdd:archive` — Archive and verify
 
-```mermaid
-graph LR
-    subgraph INLINE ["Inline (default)"]
-        I1["Sees conversation history"]
-        I2["Shares tool state"]
-        I3["Zero overhead"]
-    end
+**Get clarity:**
+- `/report:describe` — One-paragraph summary
+- `/research:triz` — Solve contradictions
 
-    subgraph FORK ["Fork (context: fork)"]
-        F1["Isolated subprocess"]
-        F2["Own context window"]
-        F3["Returns single message"]
-    end
-
-    INLINE ---|"Use for"| I_USE["Most skills:<br/>commit, tdd, tracing, ..."]
-    FORK ---|"Use for"| F_USE["Massive output,<br/>parallel execution,<br/>context isolation"]
-
-    style INLINE fill:#E8F5E9,stroke:#4CAF50,stroke-width:2px
-    style FORK fill:#FFF3E0,stroke:#FF9800,stroke-width:2px
-```
-
-#### Engineering & Architecture
-
-| Command | What It Does | Model |
-|---------|-------------|-------|
-| **`/tdd`** | Full TDD cycle: PlantUML diagrams, test plan, red tests, green implementation, refactor. Covers unit/state/security/integration/e2e. | Opus |
-| **`/triz`** | TRIZ problem-solving: ARIZ-85V algorithm -- contradiction analysis, IFR, 40 inventive principles, vepole analysis, structured resolution. | Opus |
-| **`/tracing`** | Traces bugs across all layers (frontend -> API -> backend -> DB). Generates PlantUML sequence + C4 component diagrams showing the failure path. | Opus |
-| **`/ui`** | Senior UI/UX engineer: TDD-first React components with accessibility, responsive design, visual cohesion. | Opus |
-| **`/arch-gap`** | TOGAF-style gap analysis: baseline vs target architecture, transition plan via TDD, gap matrix with risks. | Opus |
-| **`/init-repo`** | Scaffolds a full DDD monorepo: FastAPI backend (entity, repo, use case, routes) + React 19 frontend + architecture tests. `make check` passes out of the box. [Design doc](skills/init-repo/DESIGN.md). | Sonnet |
-
-#### Fix & Refactor
-
-| Command | What It Does | Model |
-|---------|-------------|-------|
-| **`/fix-bug`** | Combines `/tracing` (root cause analysis) + `/tdd` (test-first fix). Two-phase bug repair. | Opus |
-| **`/fix-tests`** | Fixes failing tests by modifying **logic, not tests**. Tests are the spec -- implementation must conform. | Sonnet |
-| **`/remove-feature`** | Surgical feature removal: traces dependency graph, classifies files (DELETE/EDIT/ADAPT), removes along critical path only. | Opus |
-| **`/dead-features`** | Finds implemented but user-unreachable functionality. Checks connectivity across layers (endpoints <-> UI, exports <-> imports). | Sonnet |
-
-#### Workflow & Ops
-
-| Command | What It Does | Model |
-|---------|-------------|-------|
-| **`/commit`** | Analyzes all changes, drafts structured commit (What/Why/Details), shows plan, waits for your approval. Never auto-pushes. | Haiku |
-| **`/deploy`** | Docker rebuild + container restart + Alembic migrations. Adapt to your stack. | Haiku |
-| **`/test-all`** | Runs every test suite across all packages (unit, integration, e2e). Reports statistics with delta vs previous run. | Haiku |
-| **`/describe`** | One-paragraph product description of what was done or what's planned. Stakeholder-friendly, no tech details. | Haiku |
-| **`/session-report`** | Generates product-focused summary from current conversation context. No git commands -- pure introspection. | Haiku |
-| **`/pipe`** | Meta-orchestrator: chains skills sequentially (`/pipe triz,tdd Fix the button`). Each phase runs in a dedicated Agent. | Opus |
-
-### How `/pipe` Works
-
-Chain any skills into a sequential pipeline. Output of each phase feeds into the next:
-
-```
-/pipe triz,ui     "Sidebar is cramped on mobile"
-       │    │
-       │    └── Phase 2: UI engineer implements the TRIZ solution
-       └─────── Phase 1: TRIZ analyzes the contradiction
-```
-
-```
-/pipe tracing,tdd "Delete button doesn't work after deploy"
-       │       │
-       │       └── Phase 2: TDD writes tests + fix for the root cause
-       └──────── Phase 1: Tracing finds where the request breaks
-```
-
-### Bootstrapping a Project
-
-```bash
-/init-repo acme-crm leads
-```
-
-Generates a ready-to-run monorepo with backend (FastAPI DDD with `leads` bounded context), frontend (React 19 + Vite), root orchestration (Makefile, docker-compose), and tests that pass immediately. See the [architecture diagrams](skills/init-repo/DESIGN.md).
+Full list: [docs/README_DETAILED.md](docs/README_DETAILED.md)
 
 ---
 
 ## Rules
 
-Rules load automatically based on file path matching. When you edit `src/domain/user.py`, Claude sees DDD rules. When you edit `tests/`, it sees testing conventions. No manual selection needed.
-
-> We deliberately keep rules lean: **15 files, ~60K chars**. Generic knowledge (DDD textbooks, 12-factor, Fowler refactoring catalog) was removed -- the model already knows it. Only project-specific conventions remain. See [Rules Guide](docs/RULES_GUIDE.md) for the rationale.
-
-<details>
-<summary><strong>Architecture & DDD Contracts (7 rules)</strong></summary>
-
-| Rule | What It Enforces |
-|------|-----------------|
-| `ARCH_TESTS.md` | Automated DDD contract validation (R1--R5) with auto-discovery via `src/domain/*/entity.py` |
-| `UNIT_TESTS.md` | Test conventions UT1--UT13: docstrings, structure, no shared mutable state |
-| `LLM_SECURITY.md` | LLM output as untrusted input, prompt injection prevention |
-| `STATE_OWNERSHIP.md` | Backend is the single source of truth for all mutable state |
-| `VISUAL_COHESION.md` | Same aggregate + same operation = one CSS pattern |
-| `SERVICES.md` | Handlers call services, not use cases directly (R7 test) |
-| `VIEWS.md` | Presentation layer: pure functions, per-aggregate separation (R6 test) |
-
-</details>
-
-<details>
-<summary><strong>Workflow & Conventions (8 rules)</strong></summary>
-
-| Rule | What It Enforces |
-|------|-----------------|
-| `break-stop.md` | **Hard stop** when tests break -- ask before fixing |
-| `git.md` | Commit messages with What / Why / Details sections |
-| `meta-rules.md` | How to write and maintain rules themselves |
-| `frontend-testing.md` | Vitest + Testing Library + Playwright patterns |
-| `frontend-design.md` | Icons-first UI, accessibility, component patterns |
-| `makefile.md` | Makefile hierarchy and delegation |
-| `monorepo-structure.md` | Monorepo layout conventions |
-| `ui-library.md` | 4-layer component architecture (tokens -> primitives -> shared -> domain) |
-
-</details>
-
----
-
-## Customization
-
-| What | Where | Tracked By |
-|------|-------|-----------|
-| Universal rules, skills, agents | `.claude/` | awesome-claude repo |
-| Your project-specific instructions | `CLAUDE.md` in your project root | your project's repo |
-| Project-specific skills (deploy, test-all) | edit in `.claude/skills/` after cloning | awesome-claude (local) |
-| Personal preferences | `~/.claude/CLAUDE.md` | not tracked |
-
-### Adding Your Own Rules
-
-> **Before writing rules, read the [Rules Guide](docs/RULES_GUIDE.md)** — how to avoid paying tokens for textbook knowledge the model already has.
-
-Create a markdown file in `.claude/rules/` with path scoping:
-
-```markdown
-<!-- .claude/rules/my-convention.md -->
----
-paths:
-  - "src/**/*.py"
----
-
-# My Convention
-
-All services must log entry and exit with structlog.
-```
-
-Claude will only see this rule when editing Python files under `src/`.
-
-### Adapting Skills to Your Stack
-
-Skills like `/deploy` and `/test-all` contain project-specific commands. After cloning, edit them to match your stack:
-
-```bash
-# Edit deploy skill for your infrastructure
-vim .claude/skills/deploy/SKILL.md
-
-# Edit test runner for your test setup
-vim .claude/skills/test-all/SKILL.md
-```
-
----
-
-## Repo Organization
-
-> **Full guide with diagrams: [docs/REPO_ORGANIZATION.md](docs/REPO_ORGANIZATION.md)**
-
-The number of product features maps directly to the number of bounded contexts in the backend. Each feature is a vertical slice through all DDD layers — not files scattered across shared directories.
-
-**The 3-Agent Rule:** From our experience, no more than 3 concurrent AI agent groups can work on the same domain without conflicts. The bottleneck is shared wiring files (`models.py`, `dependencies.py`, `router.py`, `conftest.py`) — with 4+ agents, merge conflicts outnumber productive changes.
-
-**When boundaries shift**, use the [Strangler Pattern](docs/STRANGLER_PATTERN.md) to reorganize BCs: move domain first (aggregate + repo + exceptions), then follow with application and infrastructure layers, verifying with `make check` between each phase.
-
-```mermaid
-graph LR
-    subgraph safe ["<= 3 agents · works"]
-        A1["Agent 1"] --> D1[("Domain")]
-        A2["Agent 2"] --> D1
-        A3["Agent 3"] --> D1
-    end
-
-    subgraph danger ["> 3 agents · conflicts"]
-        B1["Agent 1"] --> D2[("Domain")]
-        B2["Agent 2"] --> D2
-        B3["Agent 3"] --> D2
-        B4["Agent 4"] --> D2
-    end
-
-    style safe fill:#E8F5E9,stroke:#4CAF50,stroke-width:2px
-    style danger fill:#FFEBEE,stroke:#F44336,stroke-width:2px
-    style D1 fill:#4CAF50,color:#fff
-    style D2 fill:#F44336,color:#fff
-```
+Automatically load based on file paths:
+- **Architecture:** DDD contracts, state ownership, visual cohesion
+- **Workflow:** Git discipline, testing conventions, monorepo structure
+- **Quality:** Security, unit tests, never silently fix broken tests
 
 ---
 
 ## Philosophy
 
-This collection is opinionated. It encodes a specific engineering philosophy:
-
-```mermaid
-mindmap
-  root(("Engineering<br/>Philosophy"))
-    **Tests are specifications**
-      No red test, no requirement
-      TDD: test first, implement second
-    **Backend owns all state**
-      Frontend is a stateless projection
-      No domain logic on the client
-    **Stop on red**
-      Never silently fix broken tests
-      Always ask the user first
-    **DDD layers**
-      domain → application
-      infrastructure → presentation
-    **Commits tell a story**
-      What changed, Why, Details
-      One logical change per commit
-    **Only project-specific rules**
-      Model knows textbooks already
-      Rules for YOUR conventions only
-    **Visual cohesion**
-      Same aggregate + same operation
-      = one CSS pattern
-```
-
-If this matches how you work -- clone and go. If not -- fork and make it yours.
+- **Tests are specs** — no red test, no requirement
+- **Backend owns state** — frontend is stateless projection  
+- **Stop on red** — never silently fix broken tests
+- **DDD layers** — domain → application → infrastructure → presentation
+- **Commits tell a story** — What / Why / Details
 
 ---
 
-## FAQ
+## Contributing (dev mode)
 
-<details>
-<summary><strong>Does this work with any project or only Python/React?</strong></summary>
+Inside the awesome-claude repo:
 
-The architecture rules (DDD contracts, state ownership, test conventions) are **language-agnostic**. The frontend rules target React + TypeScript + Vite, but principles transfer. Skills like `/deploy` and `/test-all` are project-specific by design -- edit them for your stack.
-
-</details>
-
-<details>
-<summary><strong>Won't all rules load at once and slow Claude down?</strong></summary>
-
-No. Rules use YAML `paths:` frontmatter to scope activation -- Claude only loads rules relevant to the files being edited. We also keep the total footprint lean (~60K chars) by excluding textbook knowledge the model already has. See [Rules Guide](docs/RULES_GUIDE.md) for our approach.
-
-</details>
-
-<details>
-<summary><strong>Can I use just the skills without the rules?</strong></summary>
-
-Yes. Delete the `rules/` directory. Skills and agents work independently.
-
-</details>
-
-<details>
-<summary><strong>How do I update?</strong></summary>
-
-```bash
-cd .claude && git pull
-```
-
-Since `.claude/` is its own git repo (excluded from your project via `.gitignore`), updating is just a pull.
-
-</details>
-
-<details>
-<summary><strong>What if a rule conflicts with my project conventions?</strong></summary>
-
-Three options:
-1. **Override in `CLAUDE.md`** -- project-specific instructions in your root `CLAUDE.md` take precedence
-2. **Edit the rule** -- modify it locally in `.claude/rules/`
-3. **Delete the rule** -- remove files you don't need
-
-</details>
-
-<details>
-<summary><strong>Do skills work with Claude Sonnet or only Opus?</strong></summary>
-
-Skills specify their model in YAML frontmatter. Complex skills (TDD, TRIZ, tracing) use Opus. Analytical skills (dead-features, fix-tests) use Sonnet. Mechanical skills (commit, deploy, describe, test-all) use Haiku for speed and cost efficiency. You can change the `model:` field in any skill's frontmatter.
-
-</details>
+1. `/skill:setup` — symlinks `skills/`, `commands/`, `rules/` into `.claude/`. After this, every edit under `skills/` is visible to Claude Code immediately, no manual copying.
+2. `/skill:deps` — installs CLI dependencies (`openspec` etc.) and submodules from `manifest.yaml`.
+3. `/skill:onboarding` — guided walkthrough of the contributor workflow (next step depends on current state: setup → deps → propose → apply → test).
+4. Standard SDD flow: `/sdd:propose` → `/sdd:contradiction` → `/sdd:apply` → `/sdd:archive`.
+5. `/skill:test-skill <ns>:<skill>` to run skill tests; `/skill:test-all` to run everything.
+6. `/skill:release` when ready to cut a new version.
 
 ---
 
-## License
+## Details
 
-[MIT](LICENSE) -- use it, fork it, share it.
+Full documentation: [docs/README_DETAILED.md](docs/README_DETAILED.md)
+
+Installation guide (for Claude): [CLAUDE_INSTALL.md](CLAUDE_INSTALL.md)
+
+---
+
+[MIT](LICENSE)

@@ -1,0 +1,7 @@
+creates:
+- sdd-state-skill-hooks
+merges-into:
+- sdd-apply
+- sdd-archive
+- sdd-state
+owner: e.s.urvanov@gmail.com
