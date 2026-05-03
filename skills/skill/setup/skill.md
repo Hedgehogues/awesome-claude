@@ -70,13 +70,25 @@ ln -sfn "$(pwd)/<dir>" ".claude/<dir>"
 echo "$target: linked → $source"
 ```
 
-### 6. Final report
+### 6. Verify rules index
+
+После создания симлинков проверь, что `.claude/rules/index.md` существует и содержит YAML-блок с реестром правил:
+
+```bash
+test -f .claude/rules/index.md || echo "WARN: .claude/rules/index.md not found — rules registry missing"
+grep -q '```yaml' .claude/rules/index.md && echo "index.md: registry OK" || echo "WARN: index.md has no YAML block"
+```
+
+Если `index.md` отсутствует — предупредить пользователя: файл нужно создать вручную или обновить awesome-claude до версии с поддержкой rules-index.
+
+### 7. Final report
 
 ```
 skill:setup completed:
 - .claude/skills    → $(pwd)/skills    [linked|already-linked|skipped]
 - .claude/commands  → $(pwd)/commands  [...]
 - .claude/rules     → $(pwd)/rules     [...]
+- .claude/rules/index.md: [registry OK | WARN: missing]
 
 Edits in skills/, commands/, rules/ are now visible to Claude Code without manual copying.
 ```

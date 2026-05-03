@@ -11,6 +11,8 @@ CLI:
     _sdd_yaml.py move-capability <change-dir> <name> <from-field> <to-field>
         from-field/to-field ∈ {creates, merges-into}
     _sdd_yaml.py set-owner <change-dir> <email>
+    _sdd_yaml.py merge-state <change-dir>
+    _sdd_yaml.py update-index-description <index-yaml-path> <capability> <description>
 """
 import json
 import os
@@ -45,7 +47,23 @@ def save(change_dir: str, data: dict) -> None:
 
 
 def get_creates(change_dir: str) -> list[str]:
-    return load(change_dir).get("creates") or []
+    creates = load(change_dir).get("creates") or []
+    return [entry if isinstance(entry, str) else entry.get("name", "") for entry in creates]
+
+
+def read_creates_with_meta(change_dir: str) -> list[dict]:
+    """Return creates entries normalized to [{name: str, title: str | None}].
+
+    Supports both string entries ("name") and object entries ({name, title}).
+    """
+    creates = load(change_dir).get("creates") or []
+    result = []
+    for entry in creates:
+        if isinstance(entry, str):
+            result.append({"name": entry, "title": None})
+        elif isinstance(entry, dict):
+            result.append({"name": entry.get("name", ""), "title": entry.get("title")})
+    return result
 
 
 def get_merges_into(change_dir: str) -> list[str]:
@@ -87,6 +105,29 @@ def cmd_move_capability(change_dir: str, name: str, src: str, dst: str) -> int:
     return 0
 
 
+def merge_state(change_dir: str) -> None:
+    state_path = os.path.join(change_dir, ".sdd-state.yaml")
+    if not os.path.exists(state_path):
+        return
+    with open(state_path, encoding="utf-8") as f:
+        state = yaml.safe_load(f) or {}
+    data = load(change_dir)
+    if not data:
+        return
+    for field in ("stage", "last_step_at"):
+        if field in state:
+            data[field] = state[field]
+    save(change_dir, data)
+
+
+def cmd_merge_state(change_dir: str) -> int:
+    if not os.path.exists(_path(change_dir)):
+        print(f"ERROR: .sdd.yaml not found in {change_dir}", file=sys.stderr)
+        return 2
+    merge_state(change_dir)
+    return 0
+
+
 def cmd_set_owner(change_dir: str, email: str) -> int:
     if not isinstance(email, str) or not email.strip():
         print("ERROR: owner must be a non-empty string", file=sys.stderr)
@@ -118,6 +159,8 @@ def main() -> int:
         return cmd_move_capability(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
     if cmd == "set-owner" and len(sys.argv) == 4:
         return cmd_set_owner(sys.argv[2], sys.argv[3])
+    if cmd == "merge-state" and len(sys.argv) == 3:
+        return cmd_merge_state(sys.argv[2])
     print(__doc__, file=sys.stderr)
     return 2
 

@@ -114,6 +114,20 @@ semantic:
   - no_state_after_success: .sdd-state.yaml does not exist after successful archive
   - delete_only_on_archived: delete is invoked only when state transitions to archived, never on intermediate stages
 
+## Case: pending-transitions-written-on-success
+stub: change-with-sdd-yaml
+semantic:
+  - pending_transitions_written: when verify passes, .sdd-state.yaml contains
+      pending_transitions "archiving,archived" before skill ends
+  - hook_handles_transition: skill does NOT call state.py transition directly
+
+## Case: pending-transitions-written-on-fail
+stub: change-verify-failed
+semantic:
+  - pending_transitions_on_fail: when verify fails, .sdd-state.yaml contains
+      pending_transitions "archiving,archive-failed"
+  - no_direct_transition: skills/sdd/archive/skill.md contains no `state.py transition` lines
+
 ## Case: state-preserved-on-archive-fail
 stub: change-verify-failed
 semantic:

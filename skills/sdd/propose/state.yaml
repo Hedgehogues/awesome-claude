@@ -1,0 +1,5 @@
+steps:
+  proposed:
+    sets_stage: proposed
+    allowed_from:
+      - unknown

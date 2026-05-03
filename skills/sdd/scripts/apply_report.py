@@ -125,8 +125,8 @@ def main() -> int:
         print(f"ERROR: change directory not found: {change_dir}", file=sys.stderr)
         return 1
 
-    creates = sdd_yaml.get_creates(change_dir)
-    if not creates:
+    creates_meta = sdd_yaml.read_creates_with_meta(change_dir)
+    if not creates_meta:
         result = {"capabilities": [], "file_facts": [], "verify": []}
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0
@@ -136,21 +136,29 @@ def main() -> int:
 
     capabilities = []
     verify = []
-    for cap in creates:
+    for cap_meta in creates_meta:
+        cap = cap_meta["name"]
+        cap_title = cap_meta.get("title")
         cap_checked, cap_unchecked = capability_tasks(cap, checked, unchecked)
         status = determine_status(cap_checked, cap_unchecked)
-        capabilities.append({"name": cap, "status": status})
+        incomplete_count = len(cap_unchecked)
+        capabilities.append({
+            "name": cap,
+            "title": cap_title,
+            "status": status,
+            "incomplete_count": incomplete_count,
+        })
 
         where = extract_where_hint(cap, cap_checked + cap_unchecked, file_facts)
         effective_criteria = criteria if criteria else scenarios[:3]
         if not effective_criteria:
-            verify.append({"capability": cap, "scenario": cap, "where": where, "how": ""})
+            verify.append({"capability": cap, "title": cap_title, "scenario": cap, "where": where, "how": ""})
         else:
             for criterion in effective_criteria:
                 criterion_str = str(criterion)
                 if "todo" in criterion_str.lower():
                     continue
-                verify.append({"capability": cap, "scenario": str(criterion), "where": where, "how": ""})
+                verify.append({"capability": cap, "title": cap_title, "scenario": str(criterion), "where": where, "how": ""})
 
     result = {
         "capabilities": capabilities,

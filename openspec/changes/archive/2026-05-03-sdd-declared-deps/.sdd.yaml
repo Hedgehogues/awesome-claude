@@ -1,0 +1,7 @@
+creates:
+- contradiction-deps-validation
+- contradiction-index-awareness
+- apply-merges-into-context
+merges-into:
+- contradiction-full-scan
+owner: e.s.urvanov@gmail.com

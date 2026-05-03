@@ -17,13 +17,33 @@
 - **THEN** script includes a warning in the package: "missing file: <path>"
 - **THEN** Claude includes the warning in the contradiction report
 
-### Requirement: contradiction.py outputs structured package
-`contradiction.py` SHALL output a structured text package that Claude can analyze, containing: list of capabilities scanned, their spec contents, and any warnings.
+### Requirement: contradiction.py outputs structured package with PRIMARY labeling
+`contradiction.py` SHALL output a structured text package. Capabilities from `.sdd.yaml.creates` ∪ `merges-into` SHALL be labeled as PRIMARY in their section header. Draft specs SHALL be labeled `[PRIMARY/creates DRAFT]`. Background capabilities carry no label.
 
-#### Scenario: Package structure
+#### Scenario: Package structure with PRIMARY labels
 - **WHEN** `contradiction.py` completes collection
-- **THEN** output contains for each capability: capability name, spec.md content
-- **THEN** output contains summary: total capabilities discovered, total loaded, any skipped with reason
+- **THEN** output contains for each capability: capability name, spec.md content, PRIMARY label if applicable
+- **THEN** merges-into capabilities carry `[PRIMARY/merges-into]` suffix
+- **THEN** creates draft capabilities carry `[PRIMARY/creates DRAFT]` suffix
+- **THEN** output contains `--- ADJACENT Capabilities ---` section (listing or `(none)`)
+- **THEN** output contains summary with fields: `total_discovered`, `total_loaded`, `draft_specs_loaded`, `primary_capabilities`, `merges_into_missing`, `adjacent_capabilities`, `skipped`
+
+### Requirement: merges-into validation
+For each capability in `.sdd.yaml.merges-into`, `contradiction.py` SHALL verify it is present in `index.yaml`. If absent — add to Warnings section with text `merges-into capability '<name>' not found in index.yaml`.
+
+#### Scenario: Missing merges-into capability
+- **WHEN** `.sdd.yaml.merges-into` contains a capability absent from `index.yaml`
+- **THEN** Warnings section contains `merges-into capability '<name>' not found in index.yaml`
+- **THEN** `merges_into_missing` counter in Summary reflects the count
+
+### Requirement: ADJACENT capabilities detection
+`contradiction.py` SHALL detect capabilities in `index.yaml` not declared in `creates` ∪ `merges-into` but sharing ≥ 2 non-trivial tokens with the change's declared capabilities. These SHALL be listed in `--- ADJACENT Capabilities ---` section.
+
+#### Scenario: ADJACENT section always present
+- **WHEN** `contradiction.py` completes collection
+- **THEN** output always contains `--- ADJACENT Capabilities ---` section
+- **THEN** if no adjacent capabilities found, section contains `(none)`
+- **THEN** `adjacent_capabilities` field in Summary reflects the count
 
 ### Requirement: Contradiction report shows full coverage
 The contradiction report Claude produces SHALL state how many specs were analyzed and list all contradictions found with the capabilities involved.

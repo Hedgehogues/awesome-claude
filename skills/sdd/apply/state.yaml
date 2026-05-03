@@ -1,0 +1,18 @@
+steps:
+  start:
+    sets_stage: applying
+    allowed_from:
+      - proposed
+      - contradiction-ok
+  verify-start:
+    sets_stage: verifying
+    allowed_from:
+      - applying
+  verify-passed:
+    sets_stage: verify-ok
+    allowed_from:
+      - verifying
+  verify-failed:
+    sets_stage: verify-failed
+    allowed_from:
+      - verifying

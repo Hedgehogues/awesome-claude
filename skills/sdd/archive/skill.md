@@ -6,8 +6,14 @@ description: >
   (включая REMOVED-инверсию). Проверяет test-plan.md, обновляет .sdd-state.yaml,
   при verify-fail после merge specs выводит red-banner и останавливается без авто-rollback.
   test-plan.md остаётся в архивной директории как историческая запись.
-  OpenSpec CLI устанавливается автоматически по версии из .openspec-version.
 ---
+
+0. **Preflight — проверь наличие openspec** через Bash tool:
+   ```bash
+   which openspec > /dev/null 2>&1 || echo "NOTFOUND"
+   ```
+   Если вывод содержит `NOTFOUND` — остановись немедленно с сообщением:
+   `openspec not found. Install: npm install -g @openspec/cli`
 
 1. Определи имя change из $ARGUMENTS или контекста разговора. Сохрани `<change-dir>` = `openspec/changes/<name>`.
 
@@ -33,13 +39,10 @@ description: >
    только placeholder-текст (например `TODO:`) в полях `approach` или `acceptance_criteria` —
    предупреди: `test-plan.md appears unfilled` и запроси подтверждение от автора перед продолжением.
 
-5. **State transition → archiving**:
+5. Архивируй change через Bash tool:
    ```bash
-   python3 "${CLAUDE_SKILL_DIR}/../scripts/state.py" transition "<change-dir>/.sdd-state.yaml" archiving
+   openspec archive "<name>" -y
    ```
-
-6. Вызови скилл `openspec-archive-change` через Skill tool. Передай аргументы: $ARGUMENTS
-
    После этого шага specs из `<change-dir>/specs/` smerged в `openspec/specs/<cap>/spec.md`.
 
 7. **Inline L1/L2/L3 spec-verification против live spec.md.**
@@ -110,47 +113,50 @@ description: >
    🔴 OR: start a new change via /sdd:propose
    ```
 
-   Транзицию state:
+   Запиши pending_transitions для hook'а:
    ```bash
-   python3 "${CLAUDE_SKILL_DIR}/../scripts/state.py" transition "<change-dir>/.sdd-state.yaml" archive-failed
+   python3 "${CLAUDE_SKILL_DIR}/../scripts/state.py" update "<change-dir>/.sdd-state.yaml" pending_transitions "archiving,archive-failed"
    ```
 
-   **Остановись немедленно.** MUST NOT удалять `.sdd-state.yaml`. MUST NOT откатывать файлы автоматически. MUST NOT выполнять шаги 9–11.
+   **Остановись немедленно.** MUST NOT удалять `.sdd-state.yaml`. MUST NOT откатывать файлы автоматически. MUST NOT выполнять шаги 9–10.
 
-9. **При verify passed: state transition → archived**:
+9. **При verify passed: запиши pending_transitions**:
    ```bash
-   python3 "${CLAUDE_SKILL_DIR}/../scripts/state.py" transition "<change-dir>/.sdd-state.yaml" archived
+   python3 "${CLAUDE_SKILL_DIR}/../scripts/state.py" update "<change-dir>/.sdd-state.yaml" pending_transitions "archiving,archived"
    ```
+   PostToolUse hook применит переходы. Если последний переход = `archived`, hook также удалит `.sdd-state.yaml`.
 
 10. **test-plan.md остаётся в архивной директории**: после переезда change'а в
     `openspec/changes/archive/<date>-<name>/`, `test-plan.md` остаётся там как историческая запись.
     НЕ копируется в `openspec/specs/<capability>/`. Semantic test cases для capabilities
     генерируются скриптом `test-plan-to-cases.py` на этапе `sdd:apply`.
 
-11. **Финальный шаг: удалить `.sdd-state.yaml`** (только при stage=archived):
-    Сначала найди state-файл (он мог переехать в архивную директорию вместе с change'ем). Проверь оба пути:
-    ```bash
-    python3 "${CLAUDE_SKILL_DIR}/../scripts/state.py" delete "openspec/changes/archive/<date>-<name>/.sdd-state.yaml"
-    python3 "${CLAUDE_SKILL_DIR}/../scripts/state.py" delete "<change-dir>/.sdd-state.yaml"
-    ```
-    `delete` идемпотентен — если файла нет, тихо успех.
+11. **Запись лога и финальный отчёт**:
 
-12. **Финальный отчёт**: вызови через Bash tool:
+    Сначала запиши лог через Bash tool:
+    ```bash
+    TS=$(date +%Y%m%dT%H%M%S)
+    mkdir -p ".logs/<name>"
+    # Записать в .logs/<name>/archive-${TS}.md:
+    # frontmatter (change, skill, timestamp, verify_verdict)
+    # ## Archived Files — список файлов перемещённых openspec archive
+    # ## Spec Verification — L1/L2/L3 результаты по каждому Requirement из live specs
+    # ## State — финальная stage, факт удаления .sdd-state.yaml
+    ```
+
+    Затем вызови финальный отчёт через Bash tool:
     ```bash
     python3 "${CLAUDE_SKILL_DIR}/../scripts/archive_report.py" "<change-dir>"
     ```
     Скрипт возвращает JSON `{archived[]}`. Используй его для рендера отчёта в **строгом порядке блоков**:
 
     ```markdown
-    ## Технические статусы
-    <буллеты: вывод openspec-archive-change, список перемещённых файлов, пути к заархивированным артефактам, verify verdict, факт удаления .sdd-state.yaml — только факты>
-
     ## Описание
     <2–5 предложений прозы: что заархивировано и где теперь находится>
 
     ## Архивированные артефакты
     <для каждого capability из JSON.archived:>
-    - **<name>**: `<spec_path>` (spec_exists: да/нет), `<test_plan_path>` (test_plan_exists: да/нет)
+    - **<name>**: spec готов — да/нет, test-plan — да/нет
     <если JSON.archived пусто — тело `_нет_`, заголовок остаётся>
 
     ## Решено самостоятельно
@@ -160,14 +166,20 @@ description: >
     <опционально; риторические замечания; опускается если пусто>
 
     ## Вопросы к пользователю
-    <обычно ровно одна строка: `Продолжаю.` — для archive обычно нет user-only вопросов>
+    <обычно ровно одна строка: `Продолжаю.`>
     <синтетический CTA «Продолжаем по флоу?» ЗАПРЕЩЁН>
     <этот блок — последний; после него нет заголовков и прозы>
     <блок `## Как проверить` НЕ рендерится — он только в sdd:apply>
+    → Подробный технический отчёт: .logs/<name>/archive-<TS>.md
     ```
 
     **Правила коммуникационного стиля:**
     1. **По умолчанию — действие, не вопрос.** Развилки закрывай автономно, фиксируй в `## Решено самостоятельно`. В `## Вопросы к пользователю` — только реальные user-only вопросы.
-    2. **Форма ответа = форма запроса.** Семиблочный формат — только в этом финальном выводе. В промежуточной переписке — проза, 2–3 предложения, без markdown-секций.
+    2. **Форма ответа = форма запроса.** Пятиблочный формат — только в этом финальном выводе. В промежуточной переписке — проза, 2–3 предложения, без markdown-секций.
     3. **Действие первое, отчёт после.** Операции archiving выполняются первыми.
-    4. **Ноль внутреннего жаргона в user-facing полях.** В `## Описание` и `## Решено самостоятельно` SHALL NOT появляться детекторный жаргон. Использовать простой язык.
+    4. **Ноль внутреннего жаргона в user-facing полях.** В `## Описание` и `## Решено самостоятельно` SHALL NOT появляться имена файлов, детекторный жаргон или технические идентификаторы. Весь технический дамп — только в лог-файле.
+
+    **Write-then-replay:** После рендера отчёта запиши весь форматированный вывод (`## Описание`, `## Архивированные артефакты`, `## Решено самостоятельно` если есть, `## Прочее` если есть, `## Вопросы к пользователю`, строку `→ Подробный технический отчёт: ...`) в файл `.logs/<name>/archive-${TS}-output.md` через Write tool. Затем выведи содержимое:
+    ```bash
+    cat ".logs/<name>/archive-${TS}-output.md"
+    ```

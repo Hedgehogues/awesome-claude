@@ -106,3 +106,15 @@ semantic:
   - identity_check_at_start: skill calls identity.py before running detectors
   - warning_when_mismatch: when current email differs from .sdd.yaml owner, skill emits warning naming both emails
   - opt_in_overwrite: skill invokes AskUserQuestion before overwriting owner; does not silently proceed
+
+## Case: todo-items-end-with-clarification-hint
+stub: change-with-sdd-yaml
+contains:
+  - "поясни"
+  - "детали"
+semantic:
+  - hint_in_todo: every line in "## Что делать" ends with the literal text
+      "(непонятно — скажи «поясни», слишком очевидно — скажи «детали»)"
+  - hint_in_questions: every question in "## Вопросы к пользователю" (when questions are present)
+      ends with the literal text "(непонятно — скажи «поясни», слишком очевидно — скажи «детали»)"
+  - hint_uniform: all items in both sections use the same identical hint text

@@ -4,6 +4,31 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.7.0] - 2026-05-04
+
+### Added
+
+- **`manifest.yaml` namespaces section** — canonical namespace registry (`dev`, `sdd`, `report`, `research`, `skill`, `opsx`) with `public` flag and skill lists; used by `recommend-skills.md` rule and bump-version skills.
+- **SDD state hook** — `PostToolUse` hook (`skills/sdd/scripts/state_hook.py`) applies pending state transitions automatically; no more manual `state.py transition` calls inside skill files.
+- **Declarative state router** — `skills/scripts/state_manager.py` reads per-skill `state.yaml`, validates step against `current_stage`, accumulates `pending_transitions`; skills now declare transitions instead of imperating them.
+- **Per-skill `state.yaml`** — `skills/sdd/{apply,archive,contradiction,propose}/state.yaml` declare allowed stages and transitions for each skill step.
+- **`sre:` namespace** — new `sre:incident-mr` skill for GitLab incident MR workflow.
+- **`dev:install` skill** — automates awesome-claude installation flow.
+- **`skills/scripts/` shared scripts** — `state_manager.py` extracted as reusable cross-skill utility.
+- **New test cases** — `skills/skill/cases/sdd/` and `skills/skill/cases/skill/` covering apply, archive, contradiction, contradiction-deps, human-friendly output, namespace recommendations, and more.
+- **OpenSpec changes archived** — 20+ completed changes moved to `openspec/changes/archive/`.
+
+### Changed
+
+- **SDD skills updated** — `sdd:apply`, `sdd:archive`, `sdd:contradiction`, `sdd:explore`, `sdd:propose` updated to use declarative state transitions via `state_manager.py`.
+- **`sdd:audit` skill** — updated to reflect new state hook architecture.
+- **bump-version skills** — `dev:`, `sdd:`, `report:`, `research:` bump-version updated with namespaces-aware logic.
+- **`skills/skill/setup`** — updated manifest handling after namespaces section added.
+
+### Removed
+
+- **`/sdd:help`** — removed in prior commit (0.7.0 branch); namespace listing replaced by `recommend-skills` rule.
+
 ## [0.6.0] - 2026-05-02
 
 ### BREAKING

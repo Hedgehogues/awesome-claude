@@ -1,3 +1,5 @@
 namespace: report
 version: "0.6.0"
 depends_on: []
+namespaces:
+  - skills/report/

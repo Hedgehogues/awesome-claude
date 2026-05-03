@@ -6,12 +6,26 @@ description: >
   Создаёт .sdd.yaml с owner, .sdd-state.yaml (stage=proposed), test-plan.md стабы.
   Проверяет структуру design.md, ссылку на .sdd.yaml в proposal.md, и предлагает
   переключить пересекающиеся capabilities из creates в merges-into.
-  OpenSpec CLI устанавливается автоматически по версии из .openspec-version.
 ---
 
-1. Вызови скилл `openspec-propose` через Skill tool. Передай аргументы: $ARGUMENTS
+0. **Preflight — проверь наличие openspec** через Bash tool:
+   ```bash
+   which openspec > /dev/null 2>&1 || echo "NOTFOUND"
+   ```
+   Если вывод содержит `NOTFOUND` — остановись немедленно с сообщением:
+   `openspec not found. Install: npm install -g @openspec/cli`
 
-2. Получи имя change и путь к директории (из вывода openspec-propose или из $ARGUMENTS).
+1. **Определи имя change** из $ARGUMENTS:
+   - Если $ARGUMENTS — kebab-case имя (напр. `my-change`) → используй как есть
+   - Если $ARGUMENTS — текстовое описание → выведи kebab-case имя (напр. "add user auth" → `add-user-auth`)
+   - Если $ARGUMENTS пуст → спроси через AskUserQuestion: "Как назвать change? (kebab-case)"
+
+   Затем создай директорию через Bash tool:
+   ```bash
+   openspec new change "<name>"
+   ```
+
+2. Получи имя change и путь к директории из результата шага 1.
    Директория: `openspec/changes/<name>/`
 
 3. **Получи identity** через Bash tool:
@@ -31,11 +45,16 @@ description: >
    owner: ""
    ```
 
+   После записи `creates:` — если хотя бы одна запись остаётся строкой (без поля `title`) — выведи подсказку:
+   «Рекомендуется добавить `title` для удобочитаемого отображения в `sdd:apply`. Например: `{name: capability-name, title: "Понятное название"}`. Без title будет использован kebab-case идентификатор.»
+   Не блокировать выполнение — подсказка информационная.
+
 5. **Создай `.sdd-state.yaml`** через скрипт:
    ```bash
    python3 "${CLAUDE_SKILL_DIR}/../scripts/state.py" update "openspec/changes/<name>/.sdd-state.yaml" owner "<email>"
-   python3 "${CLAUDE_SKILL_DIR}/../scripts/state.py" transition "openspec/changes/<name>/.sdd-state.yaml" proposed
+   python3 "${CLAUDE_SKILL_DIR}/../../scripts/state_manager.py" --ns sdd --skill propose --step proposed --state-file "openspec/changes/<name>/.sdd-state.yaml"
    ```
+   PostToolUse hook применит переход `unknown → proposed` автоматически.
 
 6. **Установи owner в `.sdd.yaml`** через скрипт:
    ```bash
@@ -115,3 +134,16 @@ description: >
     Сообщи: `Created stub cases for <ns>:<skill> at skills/<ns>/<skill>/cases/<skill>.md — fill in TODO fields before shipping`.
 
     Если новых скиллов нет — шаг пропускается без вывода.
+
+12. **Запись лога** через Bash tool:
+    ```bash
+    TS=$(date +%Y%m%dT%H%M%S)
+    mkdir -p ".logs/<name>"
+    # Записать в .logs/<name>/propose-${TS}.md:
+    # frontmatter (change, skill, timestamp, owner)
+    # ## Steps — результаты каждого шага (identity, .sdd.yaml created, design-check, capability intersections found/resolved, test-plan created)
+    # ## Capability Intersections — что нашлось в index.yaml, как разрешено
+    # ## Checks — design structure ok/fail, proposal→.sdd.yaml reference ok/fail
+    ```
+    В конец финального вывода добавь строку:
+    `→ Подробный технический отчёт: .logs/<name>/propose-<TS>.md`

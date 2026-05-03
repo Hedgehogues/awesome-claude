@@ -1,0 +1,13 @@
+steps:
+  start:
+    sets_stage: archiving
+    allowed_from:
+      - verify-ok
+  archived:
+    sets_stage: archived
+    allowed_from:
+      - archiving
+  archive-failed:
+    sets_stage: archive-failed
+    allowed_from:
+      - archiving

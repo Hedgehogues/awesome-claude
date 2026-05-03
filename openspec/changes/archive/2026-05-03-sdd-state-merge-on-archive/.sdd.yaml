@@ -1,0 +1,7 @@
+creates:
+- sdd-state-archived-in-sdd
+merges-into:
+- sdd-archive
+owner: e.s.urvanov@gmail.com
+stage: archived
+last_step_at: '2026-05-03T15:47:16Z'

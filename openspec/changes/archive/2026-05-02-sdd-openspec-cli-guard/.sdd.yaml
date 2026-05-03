@@ -1,0 +1,8 @@
+creates:
+- sdd-openspec-cli-guard
+merges-into:
+- sdd-propose
+- sdd-explore
+- sdd-apply-change
+- sdd-archive-change
+owner: e.s.urvanov@gmail.com

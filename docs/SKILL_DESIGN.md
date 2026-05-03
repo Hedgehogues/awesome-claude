@@ -508,6 +508,29 @@ specs:
 - `archive_report.py` — читает `.sdd.yaml`, проверяет наличие файлов в `openspec/specs/` → JSON
 - `_sdd_yaml.py` — общий парсер `.sdd.yaml`, импортируется тремя предыдущими
 
+**State automation via PostToolUse hook:**
+
+SDD-скиллы не вызывают `state.py transition` напрямую. Вместо этого каждый скилл перед завершением записывает переходы через `state_manager.py` — декларативный роутер, который читает правила из `skills/<ns>/<skill>/state.yaml` и накопительно дописывает `sets_stage` в `pending_transitions`:
+
+```bash
+python3 state_manager.py --ns sdd --skill apply --step start --state-file <path>
+python3 state_manager.py --ns sdd --skill apply --step verify-start --state-file <path>
+python3 state_manager.py --ns sdd --skill apply --step verify-passed --state-file <path>
+```
+
+`state_manager.py` определяет `current_stage` как последнее значение в `pending_transitions` (если поле непустое), иначе — поле `stage` из state-файла. Это обеспечивает корректную валидацию последовательных вызовов внутри одного скилла до того, как hook применит переходы.
+
+Каждый скилл имеет `skills/<ns>/<skill>/state.yaml` с декларативными правилами:
+
+```yaml
+steps:
+  start:
+    sets_stage: applying
+    allowed_from: [proposed, contradiction-ok]
+```
+
+`PostToolUse` hook в `.claude/settings.json` (матчер `Skill`) запускает `state_hook.py`, который читает `pending_transitions`, применяет каждый переход через `state.py transition` и очищает поле. Финальные стадии определены в `state.py` через `FINAL_STAGES = {"archived"}` — при достижении финальной стадии hook удаляет `.sdd-state.yaml`. Hook полностью decoupled — не знает имён скиллов, только читает поле из state-файла.
+
 ---
 
 ### Обязательные секции design.md

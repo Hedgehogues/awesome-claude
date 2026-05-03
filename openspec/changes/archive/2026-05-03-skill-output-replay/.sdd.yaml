@@ -1,0 +1,6 @@
+creates:
+- write-then-replay-output
+- claude-way-agent-guard
+merges-into:
+- skill-run-log-archiving
+owner: e.s.urvanov@gmail.com
