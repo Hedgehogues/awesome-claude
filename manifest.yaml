@@ -3,7 +3,7 @@
 # tools:   CLI tools required by skills; /skill:deps installs/verifies these.
 # repos:   git submodules; managed by /sdd:repo, installed/synced by /skill:deps via /sdd:sync.
 
-version: "0.7.0"
+version: "0.6.1"
 
 tools:
   openspec: "0.13.1"
