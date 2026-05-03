@@ -81,6 +81,16 @@ shared/docs/   → .claude/docs/shared/
 - Claude Code и сами скиллы не нужно адаптировать
 - Меняется только `install.sh` и логика разворачивания
 
+## Dependencies / Follow-ups
+
+Change `post-release-version-bump` принял ряд решений, которые нужно пересмотреть после реализации `namespace-first-structure`:
+
+1. **`.manifest` с полем `namespaces:`** — в новой структуре становится избыточным. Самоописываемая директория `<ns>/` сама говорит что копировать. При реализации `namespace-first-structure` — убрать `namespaces:` из `.manifest` или удалить `.manifest` целиком.
+
+2. **`bump-namespace.sh` пути** — скрипт клонирует `skills/<ns>/` из remote. После переструктурирования нужно клонировать `<ns>/` и маппить подпапки. Обновить пути в скрипте.
+
+3. **`claude-entry-point` через `index.md`** — проверить совместимость с `shared/docs/`. Возможно `index.md` логичнее лежит в `shared/docs/` вместо `.claude/awesome-claude/`.
+
 ## Risks / Trade-offs
 
 [Дублирование расходится со временем] → если правило дублировано в `dev/` и `sdd/`, изменение в одном не дойдёт до другого. Митигация: документировать в `docs/REPO_ORGANIZATION.md` критерий "когда `shared/`, когда дублирование": >2 namespace-ов или критичная общая логика → `shared/`; иначе дублируем.

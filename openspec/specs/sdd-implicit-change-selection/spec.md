@@ -1,0 +1,44 @@
+# sdd-implicit-change-selection Specification
+
+## Purpose
+TBD - created by archiving change sdd-implicit-change-selection. Update Purpose after archive.
+## Requirements
+### Requirement: При отсутствии аргументов скилл определяет чендж через диалог
+
+`sdd:contradiction`, `sdd:apply`, `sdd:archive` SHALL при вызове без `$ARGUMENTS` определить чендж через `AskUserQuestion` — либо в режиме A (контекст очевиден), либо в режиме B (сканирование). SHALL NOT начинать основную работу до подтверждения ченджа пользователем.
+
+#### Scenario: Режим A — чендж очевиден из контекста
+
+- **GIVEN** пользователь только что обсуждал чендж `sdd-implicit-change-selection` в этой сессии
+- **WHEN** пользователь вызывает `sdd:contradiction` без аргументов
+- **THEN** скилл показывает диалог «Продолжить с `sdd-implicit-change-selection` / Выбрать другой»
+- **THEN** скилл НЕ вызывает Bash, Read или другие инструменты до получения ответа
+
+#### Scenario: Режим B — новая сессия, контекст неизвестен
+
+- **GIVEN** новая сессия, ни один чендж не обсуждался
+- **WHEN** пользователь вызывает `sdd:apply` без аргументов
+- **THEN** скилл читает список директорий из `openspec/changes/`, исключает архивированные
+- **THEN** показывает плоский алфавитный список через `AskUserQuestion` без ранжирования
+
+#### Scenario: Аргумент передан явно
+
+- **WHEN** пользователь вызывает `/sdd:contradiction my-change`
+- **THEN** шаг Determine Change пропускается, скилл сразу работает с `my-change`
+
+### Requirement: sdd:contradiction не изменяет файлы вне директории ченджа
+
+`sdd:contradiction` MUST NOT изменять файлы вне `openspec/changes/<name>/`. Это распространяется на `skills/`, `.claude/`, `openspec/specs/` и любые другие пути за пределами директории ченджа.
+
+#### Scenario: Найдено противоречие, связанное со скиллом
+
+- **GIVEN** proposal.md содержит ссылку на `skills/sdd/apply/skill.md` как файл, требующий изменений
+- **WHEN** contradiction формирует рекомендации по артефактам ченджа
+- **THEN** все правки предлагаются только к файлам внутри `openspec/changes/<name>/`
+- **THEN** `skills/sdd/apply/skill.md` не изменяется
+
+#### Scenario: Режим B выбирает «Выбрать другой»
+
+- **WHEN** пользователь в режиме A выбрал «Выбрать другой чендж»
+- **THEN** скилл переходит в режим B и показывает полный список кандидатов
+

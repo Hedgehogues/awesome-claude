@@ -11,6 +11,40 @@ description: >
 
 # Contradiction checker (sdd:contradiction)
 
+## Determine Change (если $ARGUMENTS пуст)
+
+Если `$ARGUMENTS` непуст — используй как PATH и переходи к следующему разделу.
+
+Если `$ARGUMENTS` пуст:
+
+**Режим A — контекст очевиден.**
+Если в текущем разговоре уже обсуждался конкретный чендж (например, только что выполнялся другой sdd-скилл или пользователь явно упоминал имя ченджа) — НЕ вызывай никаких инструментов. Через `AskUserQuestion` покажи список:
+1. Продолжить с `<name>` (наиболее вероятный)
+2. Выбрать другой чендж
+
+Если пользователь выбрал вариант 2 — переходи к режиму B.
+
+**Режим B — контекст неоднозначен.**
+Если чендж из разговора определить нельзя — выполни через Bash tool:
+```bash
+git branch --show-current
+git status --short
+ls openspec/changes/
+```
+Сканируй `openspec/changes/`, ранжируй кандидатов по трём сигналам (убыв. приоритет):
+1. Имя ветки совпадает с именем директории ченджа.
+2. В `openspec/changes/<name>/` есть изменённые/untracked файлы по `git status`.
+3. Директория существует и не архивирована (нет `.sdd-state.yaml` со `stage: archived`).
+
+Через `AskUserQuestion` покажи нумерованный список до 7 кандидатов (отсортированных по убыванию релевантности, с пометкой «наиболее вероятный» у первого). Остальные скрыты с пометкой «ещё N».
+
+Дождись выбора. Используй выбранный чендж как PATH = `openspec/changes/<name>`.
+
+## SCOPE CONSTRAINT
+
+Все правки выполняются исключительно внутри `openspec/changes/<name>/`.
+MUST NOT изменять файлы вне этой директории, включая `skills/`, `.claude/`, `openspec/specs/`.
+
 ## Identity check (если PATH — change-директория)
 
 Если PATH является change-директорией (содержит `proposal.md` и `.sdd.yaml`), перед основным анализом:
@@ -46,10 +80,15 @@ description: >
    python "${CLAUDE_SKILL_DIR}/scripts/contradiction.py" "<change-dir-absolute-path>" 2>&1
    ```
 3. Прочитай stdout. Он содержит:
-   - Specs всех capabilities из `openspec/specs/index.yaml`
-   - Summary: `total_discovered`, `total_loaded`, `skipped`
-   - Warnings о missing files
-4. Включи загруженные спеки в scope анализа наравне с локальными артефактами change'а.
+   - Секции `--- Capability: <name> (<path>) [<label>] ---` для каждой загруженной спеки:
+     - `[PRIMARY/merges-into]` — capability из `.sdd.yaml.merges-into`, найденная в index
+     - `[PRIMARY/creates]` — capability из `.sdd.yaml.creates`, уже в index (live)
+     - `[PRIMARY/creates DRAFT]` — capability из `.sdd.yaml.creates`, не в index (draft)
+     - без метки — background capability (весь остальной index)
+   - Секция `--- ADJACENT Capabilities ---` — capabilities из index, тематически смежные с change но незадекларированные; только listing, не включать в scope анализа
+   - Summary: `total_discovered`, `total_loaded`, `draft_specs_loaded`, `primary_capabilities`, `merges_into_missing`, `adjacent_capabilities`, `skipped`
+   - Warnings о missing files и missing merges-into capabilities
+4. Включи загруженные PRIMARY и background спеки в scope анализа. PRIMARY-capabilities анализируй в первую очередь. ADJACENT — только информационный раздел, в анализ не включай.
 5. В отчёте добавь строку после заголовка:
    `Analyzed: <total_loaded> capabilities from index` (или `index.yaml not found` если скрипт сообщил об этом).
 6. Capabilities, пропущенные из-за missing files, перечисли в отдельной секции отчёта:
@@ -519,34 +558,74 @@ Re-run numeric+semantic... found: <N issues | none → stable>
 
 ---
 
-## User-facing wrapper (финальный шаг — после Phase 5)
+## Log write (финальный шаг — перед User-facing wrapper)
 
-После завершения всех фаз и вывода детализированного отчёта, вызови через Bash tool:
+Если PATH — change-директория, запиши полный технический отчёт в лог-файл через Bash tool:
+
+```bash
+TS=$(date +%Y%m%dT%H%M%S)
+mkdir -p ".logs/<name>"
+cat > ".logs/<name>/contradiction-${TS}.md" << 'LOGEOF'
+---
+change: <name>
+skill: sdd:contradiction
+timestamp: <TS>
+exit_semantics: <clean|has-hard-issues>
+hard_issues: <hard_counts.total>
+warnings: <warning_counts.total>
+drift_score: <drift_score>
+---
+
+## Drift
+
+| Тип | Кол-во | Вес | Баллы | Комментарий |
+|-----|--------|-----|-------|-------------|
+| hard issues | <N> | ×10 | <N×10> | <"нет критических ошибок" если N=0, иначе "критично — исправить до apply"> |
+| warnings    | <M> | ×1  | <M>    | <"незначительно" если M≤5, "умеренно" если M≤10, "много предупреждений" если M>10> |
+| **drift_score** | — | — | **<N×10+M>** | <"низкий" если ≤10, "умеренный" если ≤30, "высокий" если >30> |
+
+## Detector Report
+
+<verbatim полный отчёт Phase 3/4: все секции --- Hard issues ---, --- Cascade predictions ---,
+--- CONVERGE pass N ---, --- Post-fix second-order issues ---, --- Soft warnings ---,
+--- Subjects covered by semantic detector ---, --- Summary --->
+LOGEOF
+echo "log: .logs/<name>/contradiction-${TS}.md"
+```
+
+Сохрани `TS` для ссылки в диалоговом выводе. Если PATH — не change-директория — пропусти молча.
+
+---
+
+## User-facing wrapper (финальный шаг — после Log write)
+
+Вызови через Bash tool:
 
 ```bash
 echo "<детализированный отчёт выше>" | python3 "${CLAUDE_SKILL_DIR}/../scripts/contradiction_summary.py" -
 ```
 
-Или передай файл с отчётом если он сохранён. Скрипт возвращает JSON `{hard_counts, warning_counts, residual_risk, convergence, exit_semantics}`.
+Скрипт возвращает JSON `{hard_counts, warning_counts, residual_risk, convergence, exit_semantics}`.
 
-Используй его для рендера user-facing отчёта в **строгом порядке блоков**:
+Рендери диалоговый отчёт в **строгом порядке блоков**:
 
 ```markdown
-## Технические статусы
-<детализированный отчёт детекторов целиком, без изменений — verbatim, включая все секции:
---- Hard issues --- / --- Cascade predictions --- / --- CONVERGE pass N --- /
---- Soft warnings --- / --- Subjects covered --- / --- Summary ---> 
-
 ## Описание
 <2–5 предложений прозы: что произошло, какие проблемы найдены — на простом языке, без жаргона детекторов>
 
 ## Найденные противоречия
-<компактный сводный список из JSON:>
-<если hard_counts.total > 0:>
-- hard: <total> (numeric=<n>, reference=<r>, deontic=<d>, semantic=<s>)
-- warnings: <total> (redundancy=<r>, coverage=<c>, ...)
-- residual_risk: <level> — <reason>
-<если hard_counts.total == 0: тело `_нет_`, заголовок остаётся>
+<если hard_counts.total == 0: тело `нет`, заголовок остаётся>
+<если hard_counts.total > 0: компактный список — hard: N, warnings: M>
+
+## Что делать
+<для каждого warning и hard issue — одна строка `- [ ] <действие>`:
+  — описывать ЧТО изменить в тексте change'а на уровне смысла, не технических имён
+  — не упоминать имена файлов, имена детекторов, технические идентификаторы
+  — формулировать как команду Клоду: «Убери...», «Добавь...», «Сократи...»
+  — каждая строка должна быть понятна без открытия других файлов
+  — каждая строка заканчивается подсказкой: `(непонятно — скажи «поясни», слишком очевидно — скажи «детали»)`
+если нет замечаний: тело `_нет замечаний_`, заголовок остаётся>
+→ Подробный технический отчёт: .logs/<name>/contradiction-<TS>.md
 
 ## Решено самостоятельно
 <опционально; decision-gate развилки, закрытые автономно; формат: «вопрос → решение»; опускается если пусто>
@@ -555,8 +634,9 @@ echo "<детализированный отчёт выше>" | python3 "${CLAUD
 <опционально; риторические замечания, follow-up идеи; опускается если пусто>
 
 ## Вопросы к пользователю
-<decision-gate вопросы (если сработал decision gate в Phase 4) нумерованным списком>
-<если decision-gate не сработал и других user-only вопросов нет — ровно одна строка: `Продолжаю.`>
+<только вопросы про желаемое поведение, на которые можно ответить не зная кода; технические выборы Claude закрывает самостоятельно и фиксирует в `## Решено самостоятельно`>
+<каждый вопрос заканчивается подсказкой: `(непонятно — скажи «поясни», слишком очевидно — скажи «детали»)`>
+<если вопросов нет — ровно одна строка: `Продолжаю.`>
 <синтетический CTA «Продолжаем по флоу?» ЗАПРЕЩЁН>
 <этот блок — последний; после него нет заголовков и прозы>
 <блок `## Как проверить` НЕ рендерится — он только в sdd:apply>
@@ -564,22 +644,36 @@ echo "<детализированный отчёт выше>" | python3 "${CLAUD
 
 **Правила коммуникационного стиля:**
 1. **По умолчанию — действие, не вопрос.** Любую развилку, закрываемую разумным предположением, закрывай автономно и фиксируй в `## Решено самостоятельно`. В `## Вопросы к пользователю` — только decision-gate вопросы или реальные user-only вопросы.
-2. **Форма ответа = форма запроса.** Семиблочный формат — только в этом финальном выводе. В промежуточной переписке — проза, 2–3 предложения, без markdown-секций.
+2. **Форма ответа = форма запроса.** Шестиблочный формат — только в этом финальном выводе. В промежуточной переписке — проза, 2–3 предложения, без markdown-секций.
 3. **Действие первое, отчёт после.** Никаких pre-action narration для диагностических шагов.
-4. **Ноль внутреннего жаргона в user-facing полях.** В `## Описание` и `## Решено самостоятельно` SHALL NOT появляться: `hard issue`, `drift_score`, `residual_risk`, `SSOT`, `pointer-rewrite`, `Mandatory-блок N`, `convergence`. Жаргон допускается только внутри `## Технические статусы` (там отчёт детекторов verbatim).
+4. **Ноль внутреннего жаргона в user-facing полях.** В `## Описание`, `## Что делать` и `## Вопросы к пользователю` SHALL NOT появляться: имена файлов, имена детекторов, `hard issue`, `drift_score`, `residual_risk`, `SSOT`, `pointer-rewrite`, `convergence`. Весь технический дамп — только в лог-файле.
+5. **«Поясни» — максимум одно предложение.** Если пользователь отвечает «поясни», «не понял», «сложно» или аналогично — следующий ответ строго одно предложение на русском языке без технических терминов, имён файлов и вариантов реализации. При повторном «поясни» — переформулировать иначе, но снова одним предложением, объём не увеличивать.
+
+## Write-then-replay (если PATH — change-директория)
+
+После рендера диалогового отчёта (User-facing wrapper) запиши весь форматированный вывод в файл и воспроизведи его — это гарантирует сохранность вывода при запуске через Agent tool.
+
+1. Запиши блоки `## Описание`, `## Найденные противоречия`, `## Что делать`, `## Решено самостоятельно` (если присутствует), `## Прочее` (если присутствует), `## Вопросы к пользователю` и строку `→ Подробный технический отчёт: ...` в файл `.logs/<name>/contradiction-${TS}-output.md` через Write tool. Используй тот же `TS`, что был получен на шаге Log write.
+
+2. Выведи содержимое файла через Bash tool:
+   ```bash
+   cat ".logs/<name>/contradiction-${TS}-output.md"
+   ```
+
+Если PATH — не change-директория — пропусти молча.
 
 ## State-update (если PATH — change-директория)
 
-После рендера отчёта обнови `.sdd-state.yaml`:
+После рендера отчёта запиши pending_transitions для hook'а:
 
 ```bash
 # при hard_counts.total == 0:
-python3 "${CLAUDE_SKILL_DIR}/../scripts/state.py" transition "<change-dir>/.sdd-state.yaml" contradiction-ok
+python3 "${CLAUDE_SKILL_DIR}/../scripts/state_manager.py" --ns sdd --skill contradiction --step ok --state-file "<change-dir>/.sdd-state.yaml"
 
 # при hard_counts.total > 0:
-python3 "${CLAUDE_SKILL_DIR}/../scripts/state.py" transition "<change-dir>/.sdd-state.yaml" contradiction-failed
+python3 "${CLAUDE_SKILL_DIR}/../scripts/state_manager.py" --ns sdd --skill contradiction --step failed --state-file "<change-dir>/.sdd-state.yaml"
 ```
 
-Если `state.py` сообщил `transition not allowed` (текущая stage не позволяет переход) — выведи stderr скрипта в `## Технические статусы`, но не останавливай скилл (отчёт уже отрендерен). Это сигнал, что workflow в неконсистентном состоянии — пользователь разберётся вручную.
+PostToolUse hook применит переход автоматически. Если hook не настроен — state не обновится, скилл продолжает работать.
 
 Если PATH — не change-директория — пропусти этот шаг молча.

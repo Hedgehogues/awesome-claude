@@ -131,9 +131,6 @@ Ask Claude to install with dev skills:
 > Install awesome-claude in dev mode from github.com/Hedgehogues/awesome-claude
 
 ```
-# Test a specific skill
-/skill:test-skill sdd:help
-
 # Test all skills
 /skill:test-all
 
@@ -236,7 +233,6 @@ Note: verify (L1/L2/L3) теперь встроен в `/sdd:apply` (проти�
 | **`/sdd:archive`** | Archive completed change, sync delta specs to `openspec/specs/` (L1/L2/L3 spec-verify with REMOVED-inversion встроен; deletes `.sdd-state.yaml` on success) |
 | **`/sdd:audit`** | Audit manifest consistency (structural + semantic) |
 | **`/sdd:explore`** | Enter exploration mode — non-linear, applicable at any phase |
-| **`/sdd:help`** | Show repo state and full workflow pipeline |
 | **`/sdd:repo`** | Add / update branch / remove submodule via guided flow |
 | **`/sdd:sync`** | Initialize and synchronize submodules |
 

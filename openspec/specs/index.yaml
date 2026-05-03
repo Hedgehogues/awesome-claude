@@ -256,3 +256,24 @@ specs:
     '
   path: skill-release/spec.md
   test_plan: skill-release/test-plan.md
+- capability: contradiction-deps-validation
+  description: 'Явная валидация creates/merges-into из .sdd.yaml в contradiction.py:
+    проверка наличия merges-into capabilities в index.yaml, маркировка PRIMARY в пакете
+    анализа ([PRIMARY/creates], [PRIMARY/merges-into], [PRIMARY/creates DRAFT]), warning
+    при missing. Поля primary_capabilities и merges_into_missing в Summary.'
+  path: contradiction-deps-validation/spec.md
+  test_plan: contradiction-deps-validation/test-plan.md
+- capability: contradiction-index-awareness
+  description: 'Index awareness scan в contradiction.py: обнаружение capabilities в
+    index.yaml, тематически смежных с change но незадекларированных (>=2 shared non-trivial
+    токена). Вывод как ADJACENT Capabilities listing. STOP_TOKENS фильтрует generic
+    токены. Поле adjacent_capabilities в Summary.'
+  path: contradiction-index-awareness/spec.md
+  test_plan: contradiction-index-awareness/test-plan.md
+- capability: apply-merges-into-context
+  description: 'sdd:apply загружает спеки capabilities из merges-into как read-only
+    контекст перед реализацией задач (шаг 3a). Для каждой capability ищет path в
+    index.yaml, читает spec.md через Read tool. Предупреждение при отсутствии в index,
+    без блокировки.'
+  path: apply-merges-into-context/spec.md
+  test_plan: apply-merges-into-context/test-plan.md

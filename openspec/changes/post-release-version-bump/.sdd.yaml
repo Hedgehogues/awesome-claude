@@ -1,0 +1,7 @@
+creates:
+- bump-ref-support
+- bump-full-namespace
+- claude-entry-point
+merges-into:
+- bump-namespace
+owner: e.s.urvanov@gmail.com

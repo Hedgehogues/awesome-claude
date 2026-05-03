@@ -29,6 +29,50 @@ make validate
 - `gitops` отсутствует в `.gitmodules`
 - Все change-директории в `openspec/changes/` имеют `.openspec.yaml` со `schema:` полем
 
+### Уровень 1а: Целостность rules-реестра (всегда выполняется)
+
+Читает `.claude/rules/index.md`, парсит YAML-блок с `rules:` и проверяет:
+
+```bash
+python3 -c "
+import re, yaml, os, sys
+txt = open('.claude/rules/index.md').read()
+m = re.search(r'\`\`\`yaml\n(.*?)\`\`\`', txt, re.DOTALL)
+if not m:
+    print('FAIL: index.md has no YAML block'); sys.exit(1)
+data = yaml.safe_load(m.group(1))
+rules = data.get('rules', {})
+missing = []
+for r in rules.get('always', []) + rules.get('path_scoped', []):
+    f = r['file']
+    if not os.path.exists(f):
+        missing.append(f)
+if missing:
+    print('FAIL: missing files:', missing); sys.exit(1)
+total = len(rules.get('always',[])) + len(rules.get('path_scoped',[]))
+print(f'rules-index OK — {total} rules registered')
+"
+```
+
+Также проверяет, что все `.md` файлы в `.claude/rules/` (кроме `index.md`) перечислены в реестре:
+
+```bash
+python3 -c "
+import re, yaml, glob
+txt = open('.claude/rules/index.md').read()
+m = re.search(r'\`\`\`yaml\n(.*?)\`\`\`', txt, re.DOTALL)
+data = yaml.safe_load(m.group(1))
+rules = data.get('rules', {})
+registered = {r['file'] for r in rules.get('always',[]) + rules.get('path_scoped',[])}
+on_disk = set(glob.glob('.claude/rules/**/*.md', recursive=True))
+unregistered = on_disk - registered
+if unregistered:
+    print('WARN: unregistered rules:', sorted(unregistered))
+else:
+    print('all rules on disk are registered')
+"
+```
+
 ### Уровень 2: Семантический (выполняется отдельно)
 
 Ручная проверка через чтение `manifest.yaml`:

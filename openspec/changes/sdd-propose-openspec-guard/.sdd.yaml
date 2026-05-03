@@ -1,0 +1,5 @@
+creates:
+- sdd-propose-openspec-guard
+merges-into:
+- sdd-propose
+owner: e.s.urvanov@gmail.com

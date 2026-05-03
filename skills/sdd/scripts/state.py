@@ -6,6 +6,7 @@ Usage:
     state.py update <path> <field> <value>
     state.py transition <path> <new-stage>
     state.py delete <path>
+    state.py is-final <stage>
 
 Lifecycle: file lives in openspec/changes/<change-id>/.sdd-state.yaml.
 Created at-first-touch with stage='unknown' if missing on read/update.
@@ -21,6 +22,10 @@ except ImportError:
     print("ERROR: PyYAML not installed. Run: pip install pyyaml", file=sys.stderr)
     sys.exit(1)
 
+
+FIELD_VALIDATORS = {
+    "verify_status": {"ok", "failed", "n/a"},
+}
 
 VALID_STAGES = {
     "unknown",
@@ -49,6 +54,8 @@ ALLOWED_TRANSITIONS = {
     "archived": set(),
     "archive-failed": {"archiving", "archived", "verify-ok"},
 }
+
+FINAL_STAGES = {"archived"}
 
 
 def now_iso() -> str:
@@ -83,6 +90,13 @@ def cmd_read(path: str) -> int:
 
 
 def cmd_update(path: str, field: str, value: str) -> int:
+    if field in FIELD_VALIDATORS and value not in FIELD_VALIDATORS[field]:
+        print(
+            f"ERROR: invalid value '{value}' for field '{field}'. "
+            f"Valid: {sorted(FIELD_VALIDATORS[field])}",
+            file=sys.stderr,
+        )
+        return 2
     data = load(path)
     data[field] = value
     save(path, data)
@@ -117,6 +131,10 @@ def cmd_delete(path: str) -> int:
     return 0
 
 
+def cmd_is_final(stage: str) -> int:
+    return 0 if stage in FINAL_STAGES else 1
+
+
 def main() -> int:
     if len(sys.argv) < 2:
         print(__doc__, file=sys.stderr)
@@ -130,6 +148,8 @@ def main() -> int:
         return cmd_transition(sys.argv[2], sys.argv[3])
     if cmd == "delete" and len(sys.argv) == 3:
         return cmd_delete(sys.argv[2])
+    if cmd == "is-final" and len(sys.argv) == 3:
+        return cmd_is_final(sys.argv[2])
     print(__doc__, file=sys.stderr)
     return 2
 

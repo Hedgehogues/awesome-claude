@@ -1,3 +1,5 @@
 namespace: sdd
 version: "0.7.0"
 depends_on: []
+namespaces:
+  - skills/sdd/

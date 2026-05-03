@@ -1,3 +1,5 @@
 namespace: research
 version: "0.6.0"
 depends_on: []
+namespaces:
+  - skills/research/

@@ -1,0 +1,5 @@
+creates:
+- skill-script-path-resolution
+merges-into:
+- contradiction-script-location
+owner: e.s.urvanov@gmail.com

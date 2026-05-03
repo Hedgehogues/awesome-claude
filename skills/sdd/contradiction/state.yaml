@@ -1,0 +1,9 @@
+steps:
+  ok:
+    sets_stage: contradiction-ok
+    allowed_from:
+      - proposed
+  failed:
+    sets_stage: contradiction-failed
+    allowed_from:
+      - proposed

@@ -3,13 +3,14 @@
 
 Usage: python archive_report.py <change-dir>
 
-Reads .sdd.yaml.creates, checks existence of openspec/specs/<cap>/spec.md
-and openspec/specs/<cap>/test-plan.md.
+Reads .sdd.yaml creates and merges-into, checks existence of
+openspec/specs/<cap>/spec.md and openspec/specs/<cap>/test-plan.md.
 
 Outputs JSON:
   {
     "archived": [
-      {"name": str, "spec_path": str, "test_plan_path": str, "spec_exists": bool, "test_plan_exists": bool}
+      {"name": str, "spec_path": str, "test_plan_path": str,
+       "spec_exists": bool, "test_plan_exists": bool, "kind": "creates"|"merges-into"}
     ]
   }
 """
@@ -44,21 +45,24 @@ def main() -> int:
         return 1
 
     creates = sdd_yaml.get_creates(change_dir)
+    merges_into = sdd_yaml.get_merges_into(change_dir)
     project_root = find_project_root(change_dir)
 
     archived = []
-    for cap in creates:
-        spec_path = f"openspec/specs/{cap}/spec.md"
-        test_plan_path = f"openspec/specs/{cap}/test-plan.md"
-        spec_exists = os.path.exists(os.path.join(project_root, spec_path))
-        test_plan_exists = os.path.exists(os.path.join(project_root, test_plan_path))
-        archived.append({
-            "name": cap,
-            "spec_path": spec_path,
-            "test_plan_path": test_plan_path,
-            "spec_exists": spec_exists,
-            "test_plan_exists": test_plan_exists,
-        })
+    for kind, caps in [("creates", creates), ("merges-into", merges_into)]:
+        for cap in caps:
+            spec_path = f"openspec/specs/{cap}/spec.md"
+            test_plan_path = f"openspec/specs/{cap}/test-plan.md"
+            spec_exists = os.path.exists(os.path.join(project_root, spec_path))
+            test_plan_exists = os.path.exists(os.path.join(project_root, test_plan_path))
+            archived.append({
+                "name": cap,
+                "spec_path": spec_path,
+                "test_plan_path": test_plan_path,
+                "spec_exists": spec_exists,
+                "test_plan_exists": test_plan_exists,
+                "kind": kind,
+            })
 
     result = {"archived": archived}
     print(json.dumps(result, ensure_ascii=False, indent=2))

@@ -1,0 +1,9 @@
+creates:
+- sdd-state-manager
+- sdd-state-declarations
+merges-into:
+- sdd-apply
+- sdd-archive
+- sdd-propose
+- sdd-contradiction
+owner: e.s.urvanov@gmail.com

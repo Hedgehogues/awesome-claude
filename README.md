@@ -63,6 +63,8 @@ You ask Claude → .claude/ detected → Rules loaded (by file path)
 - `/sdd:apply` — Implement checklist
 - `/sdd:archive` — Archive and verify
 
+SDD workflow tracks state automatically via a `PostToolUse` hook — no manual `state.py transition` calls needed. Each skill writes `pending_transitions` to `.sdd-state.yaml`; the hook applies them after the skill completes.
+
 **Get clarity:**
 - `/report:describe` — One-paragraph summary
 - `/research:triz` — Solve contradictions

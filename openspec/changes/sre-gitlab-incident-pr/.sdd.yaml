@@ -1,0 +1,7 @@
+creates:
+- sre-namespace
+- sre-gitlab-incident-mr
+- sre-gitlab-client
+- sre-incident-template
+merges-into: []
+owner: e.s.urvanov@gmail.com

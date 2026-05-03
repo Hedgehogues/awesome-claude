@@ -1,0 +1,5 @@
+creates:
+- namespace-install
+merges-into:
+- install-modes
+owner: e.s.urvanov@gmail.com

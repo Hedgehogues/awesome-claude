@@ -131,9 +131,72 @@ semantic:
   - index_not_updated: openspec/specs/index.yaml is NOT modified when stage=verify-failed
   - workflow_halted: skill stops with verify-failed verdict and instructs user to fix and re-run /sdd:apply
 
+## Case: pending-transitions-written-before-end
+stub: change-with-sdd-yaml
+semantic:
+  - pending_transitions_written: before the skill finishes, .sdd-state.yaml contains
+      a non-empty pending_transitions field (e.g. "applying,verifying,verify-ok")
+  - written_via_state_update: the field is written via `state.py update ... pending_transitions`
+      not via `state.py transition`
+
+## Case: no-direct-transition-in-apply
+stub: change-with-sdd-yaml
+semantic:
+  - no_direct_transition: skills/sdd/apply/skill.md does NOT contain any line matching
+      `state.py transition` (only `state.py update ... pending_transitions` is allowed)
+
 ## Case: keep-in-sync-marker-present
 stub: change-with-sdd-yaml
 semantic:
   - marker_in_apply: skills/sdd/apply/skill.md verify section contains literal comment "<!-- KEEP IN SYNC: skills/sdd/archive/skill.md verify section -->"
   - marker_in_archive: skills/sdd/archive/skill.md verify section contains literal comment "<!-- KEEP IN SYNC: skills/sdd/apply/skill.md verify section -->"
   - intentional_duplication: marker documents that L1/L2/L3 verifier text is intentionally copied between apply and archive (per design D2)
+
+## Case: state-manager-called-on-each-step
+stub: change-with-sdd-yaml
+semantic:
+  - uses_state_manager: skills/sdd/apply/skill.md содержит вызовы state_manager.py с --ns sdd --skill apply на ключевых шагах (start, verify-start, verify-passed/verify-failed)
+  - no_direct_pending_update: skills/sdd/apply/skill.md НЕ содержит прямых вызовов `state.py update ... pending_transitions` (заменены на state_manager.py)
+
+## Case: title-renders-instead-of-name-in-features
+stub: change-with-sdd-yaml
+semantic:
+  - title_shown: when .sdd.yaml contains creates entry as object {name: "cap-alpha", title: "Человекочитаемый заголовок"},
+      "## Реализованные фичи" shows "Человекочитаемый заголовок", not "cap-alpha"
+  - kebab_absent: the kebab-case name "cap-alpha" does NOT appear inside "## Реализованные фичи"
+
+## Case: status-in-russian
+stub: change-with-sdd-yaml
+semantic:
+  - done_in_russian: when a capability status is done, "## Реализованные фичи" contains «готово», not bare "done"
+  - partial_in_russian: when a capability status is partial, "## Реализованные фичи" contains «частично», not bare "partial"
+
+## Case: partial-shows-incomplete-count-not-raw-tasks
+stub: change-with-sdd-yaml
+semantic:
+  - count_shown: when a capability is partial with N unchecked tasks,
+      the line in "## Реализованные фичи" contains "задач не завершено"
+  - no_raw_task_text: raw task text (e.g. "integration тесты требуют live-run") does NOT
+      appear in "## Реализованные фичи"
+
+## Case: string-capability-fallback-to-name
+stub: change-with-sdd-yaml
+semantic:
+  - name_fallback: when .sdd.yaml contains creates entry as plain string "some-capability"
+      (no title field), "## Реализованные фичи" shows "some-capability" as the display name
+
+## Case: verify-section-uses-title-not-kebab
+stub: change-with-sdd-yaml
+semantic:
+  - title_in_header: when capability has title, the numbered entry header in "## Как проверить"
+      shows the title, not the kebab-case name
+  - kebab_absent_in_verify: the kebab-case capability name does NOT appear as a standalone
+      section header in "## Как проверить"
+
+## Case: verify-how-field-starts-with-human-expectation
+stub: change-with-sdd-yaml
+semantic:
+  - expectation_first: the "**Как:**" field in each "## Как проверить" entry begins with
+      a sentence in Russian describing the expected result before any shell command
+  - no_raw_command_start: the "**Как:**" field does NOT start with grep, cat, curl,
+      or any other shell command without preceding context

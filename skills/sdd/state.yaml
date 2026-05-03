@@ -1,0 +1,5 @@
+namespace: sdd
+defaults:
+  fields:
+    - owner
+    - started_at

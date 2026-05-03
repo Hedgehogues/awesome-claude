@@ -4,6 +4,64 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.6.1] - 2026-05-04
+
+### BREAKING
+
+- **`/sdd:help` removed** — namespace listing is now handled by the `recommend-skills` rule. Skills listing is no longer a skill invocation.
+- **`openspec` CLI now required explicitly** — all core SDD skills (`sdd:propose`, `sdd:apply`, `sdd:archive`, `sdd:contradiction`) perform a preflight check (`which openspec`) at step 0 and stop with an install hint if not found. Previously, skills attempted auto-installation from `.openspec-version`. If you rely on auto-install, run `npm install -g @openspec/cli` manually before using SDD skills.
+- **`sdd:propose` and `sdd:archive` no longer delegate to `opsx` skills** — they call `openspec new change` and `openspec archive` directly via Bash. The `opsx:` dependency at runtime is removed for these two skills.
+
+### Added
+
+**SDD state automation via `PostToolUse` hook:**
+
+- **`skills/sdd/scripts/state_hook.py`** — new `PostToolUse` hook. Fires after every `Skill` tool use, reads `pending_transitions` from the freshest `.sdd-state.yaml`, applies each stage via `state.py transition` in order, then clears the field. If the final stage is in `FINAL_STAGES` (currently `archived`), the hook deletes `.sdd-state.yaml`. The hook is fully decoupled — it knows no skill names, only reads the state file.
+- **`skills/scripts/state_manager.py`** — declarative state router. Takes `--ns`, `--skill`, `--step`, `--state-file`. Reads `skills/<ns>/<skill>/state.yaml`, validates the requested step against `current_stage` (last entry in `pending_transitions`, or `stage` field if empty), then appends `sets_stage` to `pending_transitions` via accumulation. Skills call this instead of `state.py transition` directly.
+- **Per-skill `state.yaml`** — declarative transition tables for each SDD skill:
+  - `sdd/apply/state.yaml`: steps `start → applying`, `verify-start → verifying`, `verify-passed → verify-ok`, `verify-failed → verify-failed`; allowed_from guards prevent out-of-order transitions.
+  - `sdd/archive/state.yaml`: steps `start → archiving`, `archived → archived`, `archive-failed → archive-failed`.
+  - `sdd/contradiction/state.yaml`: steps `ok → contradiction-ok`, `failed → contradiction-failed`.
+  - `sdd/propose/state.yaml`: step `proposed → proposed` (initialisation).
+- **`skills/sdd/state.yaml`** — top-level namespace state declaration.
+- **`manifest.yaml` namespaces section** — canonical namespace registry (`dev`, `sdd`, `report`, `research`, `skill`, `opsx`) with `public` flag and skill lists. Used by `recommend-skills.md` and bump-version skills to discover which skills belong to which namespace.
+- **`sre:` namespace** — new `skills/sre/incident-mr/` skill for GitLab incident MR workflow (creates MR from incident template, fills description, assigns reviewers).
+- **`dev:install` skill** — `skills/dev/install/` automates the awesome-claude installation flow.
+- **`skills/scripts/` shared directory** — `state_manager.py` is now a cross-skill shared utility, separate from the `sdd`-specific `skills/sdd/scripts/`.
+- **New test cases (10+)**:
+  - `skills/skill/cases/sdd/`: `apply-merges-into-context`, `archive-merges-into-support`, `contradiction-deps-validation`, `contradiction-draft-specs`, `contradiction-index-awareness`, `human-friendly-features-section`, `human-friendly-skill-output`, `namespace-skill-recommendations`, `scripts-access-via-mcp`, `sdd-openspec-cli-guard`, `sdd-state-archived-in-sdd`, `sdd-state-skill-hooks`, `skill-run-log-archiving`.
+  - `skills/skill/cases/skill/`: `bump-version`, `post-release`.
+  - `skills/sdd/scripts/cases/state_hook.md` — test case for `state_hook.py`.
+  - `skills/skill/test-skill/stubs/with-hooks-config.md` — stub for harness testing with `PostToolUse` hook active.
+- **OpenSpec changes archived (20+)** — completed changes moved to `openspec/changes/archive/`: `sdd-openspec-cli-guard`, `skill-run-logs`, `human-friendly-features-section`, `install-modes`, `recommend-namespace-usage`, `rules-index`, `sdd-declared-deps`, `sdd-implicit-change-selection`, `sdd-merges-into-gaps`, `sdd-skill-logs-to-repo-root`, `sdd-state-manager`, `sdd-state-merge-on-archive`, `sdd-state-skill-hooks`, `skill-output-replay`, `structured-apply-output`, and others.
+- **30+ new OpenSpec specs** in `openspec/specs/`: `apply-merges-into-context`, `archive-merges-into-support`, `contradiction-deps-validation`, `contradiction-draft-specs`, `contradiction-index-awareness`, `human-friendly-features-section`, `human-friendly-skill-output`, `namespace-skill-recommendations`, `sdd-implicit-change-selection`, `sdd-state-archived-in-sdd`, `sdd-state-declarations`, `sdd-state-manager`, `skill-run-log-archiving`, `write-then-replay-output`, `claude-way-agent-guard`, and others.
+- **`docs/SKILL_DESIGN.md`** — new section documenting the `PostToolUse` hook pattern and `state_manager.py` accumulation model with code examples.
+
+### Changed
+
+**SDD core skills:**
+
+- **`sdd:apply`** — added step 0 openspec preflight. Added "Determine Change" logic: Mode A (context obvious — ask to confirm) and Mode B (context ambiguous — scan `openspec/changes/`, rank by branch name match + git status + non-archived, show list via `AskUserQuestion`). Added step 3a: loads `merges-into` specs as read-only context before implementation. State transitions now use `state_manager.py` accumulation instead of direct `state.py transition` calls.
+- **`sdd:archive`** — added step 0 openspec preflight. Replaced `opsx:openspec-archive-change` Skill invocation with direct `openspec archive "<name>" -y` Bash call. State transitions now write `pending_transitions` field; `PostToolUse` hook applies them. Hook deletes `.sdd-state.yaml` on `archived` stage automatically.
+- **`sdd:contradiction`** — added step 0 openspec preflight. Added "Determine Change" logic (same Mode A/B as apply). Added `SCOPE CONSTRAINT` section: all edits are confined to `openspec/changes/<name>/`; MUST NOT touch `skills/`, `.claude/`, `openspec/specs/`. Updated `contradiction.py` output format: capabilities now labelled `[PRIMARY/merges-into]`, `[PRIMARY/creates]`, `[PRIMARY/creates DRAFT]`, or unlabelled background; added `--- ADJACENT Capabilities ---` section for thematically related capabilities outside the declared scope (informational only, not included in analysis). Summary fields extended: `draft_specs_loaded`, `primary_capabilities`, `merges_into_missing`, `adjacent_capabilities`. Log now written to `.logs/<name>/contradiction-<TS>.md`.
+- **`sdd:propose`** — added step 0 openspec preflight. Replaced `opsx:openspec-propose` Skill invocation with direct `openspec new change "<name>"` Bash call. Added `title` hint when `creates:` entries lack a `title` field. State initialisation uses `state_manager.py`.
+- **`sdd:explore`** — minor update.
+- **`sdd:audit`** — updated to reflect new state hook architecture; verifies `state_hook.py` and per-skill `state.yaml` files.
+- **`sdd/scripts/_sdd_yaml.py`** — extended to read `merges-into` field and support `title` in `creates` entries.
+- **`sdd/scripts/apply_report.py`** and **`archive_report.py`** — updated for new `.sdd.yaml` schema.
+
+**Infrastructure:**
+
+- **bump-version skills** (`dev:`, `sdd:`, `report:`, `research:`) — updated with namespaces-aware logic reading `manifest.yaml` namespaces section.
+- **`skills/skill/setup/skill.md`** — updated manifest handling after namespaces section added.
+- **`openspec/specs/contradiction-full-scan/spec.md`** — extended with PRIMARY/ADJACENT capability classification.
+- **`openspec/specs/index.yaml`** — 21 new capability entries added.
+- **`README.md`** — added note: SDD workflow tracks state automatically via `PostToolUse` hook; no manual `state.py transition` calls needed.
+
+### Removed
+
+- **`/sdd:help`** (`commands/sdd/help.md`, `skills/sdd/help/skill.md`, `skills/sdd/help/cases/help.md`) — pipeline step listing is now handled by `recommend-skills` rule and `manifest.yaml` namespaces section.
+
 ## [0.6.0] - 2026-05-02
 
 ### BREAKING
@@ -28,12 +86,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`manifest.yaml`** at repo root — canonical version store: `version`, `tools` (openspec etc.), `repos`.
 - **`sdd:` namespace** — full spec-driven development workflow (9 skills):
   - `sdd:propose` (step 4), `sdd:contradiction` (step 5), `sdd:apply` (step 6), `sdd:archive` (step 7) — core pipeline.
-  - `sdd:help` (step 1), `sdd:sync` (step 2), `sdd:repo` (step 3), `sdd:audit`, `sdd:explore` — supporting tools.
+  - `sdd:sync` (step 2), `sdd:repo` (step 3), `sdd:audit`, `sdd:explore` — supporting tools.
 - **SDD state machine** — 11-stage lifecycle (`proposed → contradiction-ok → applying → verifying → verify-ok → archiving → archived`); managed by `skills/sdd/scripts/state.py` via `.sdd-state.yaml` (gitignored).
 - **Identity resolution** — `skills/sdd/scripts/identity.py`: resolves owner email from `claude auth status` with `git config user.email` fallback.
 - **Eval framework** in `skill:test-skill` — k=5 bootstrap, ≥4/5 pass threshold, real-time progress `[case] N/5 ✓`, LLM-judge for semantic assertions, `RESULTS_FILE` output in `test-results/`.
 - **Test stubs** — `skills/skill/test-skill/stubs/with-change.md` for harness testing with active change + manifest.
-- **Namespace listing commands** — `/sdd:help`, `/dev:help`, `/research:help`, `/skill:help` (list all skills in namespace).
+- **Namespace listing commands** — `/dev:help`, `/research:help`, `/skill:help` (list all skills in namespace).
 - **7-block structured apply output** + Python report scripts for sdd:apply.
 - **OpenSpec changes pipeline** — `openspec/changes/` with proposed follow-up work:
   - `unified-test-flow` — architecture for behavioral vs acceptance test distinction.
@@ -77,7 +135,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `/sdd:archive` — now performs identity check, state transitions (`archiving → archived|archive-failed`), inline L1/L2/L3 spec-verify with REMOVED-inversion; deletes `.sdd-state.yaml` on success.
 - `/sdd:propose` — initializes `.sdd-state.yaml` (`stage=proposed`), sets `owner:` in `.sdd.yaml`, runs merge-dialog.
 - `/sdd:contradiction` — performs identity check at start, transitions state to `contradiction-ok|contradiction-failed` at end.
-- `/sdd:help` — pipeline shrunk from 10 to 8 numbered steps; workflow_step indices updated (apply=6, archive=7, audit=[8]).
 - `bump-namespace.sh` — accepts optional `<ref>` second argument (tag or branch); falls back to latest tag if omitted.
 - `docs/README_DETAILED.md` — mermaid diagram and command table updated to reflect merged verify.
 

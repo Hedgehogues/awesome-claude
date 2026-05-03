@@ -1,0 +1,6 @@
+creates:
+- archive-merges-into-support
+- contradiction-draft-specs
+merges-into:
+- contradiction-full-scan
+owner: e.s.urvanov@gmail.com
